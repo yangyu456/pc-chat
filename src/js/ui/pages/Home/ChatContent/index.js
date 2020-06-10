@@ -1,36 +1,43 @@
-import React, {Component} from 'react';
-import {inject, observer} from 'mobx-react';
-import {ipcRenderer, popMenu, isElectron, fs, ContextMenuTrigger, hideMenu} from '../../../../platform';
-import clazz from 'classname';
-import moment from 'moment';
-import axios from 'axios';
+import React, { Component } from "react";
+import { inject, observer } from "mobx-react";
+import {
+    ipcRenderer,
+    popMenu,
+    isElectron,
+    fs,
+    ContextMenuTrigger,
+    hideMenu,
+} from "../../../../platform";
+import clazz from "classname";
+import moment from "moment";
+import axios from "axios";
 
-import classes from './style.css';
-import Avatar from 'components/Avatar';
-import PreviewImage from './PreviewImage'
-import helper from 'utils/helper';
-import {parser as emojiParse} from 'utils/emoji';
-import {on, off} from 'utils/event';
-import MessageContentType from '../../../../wfc/messages/messageContentType';
-import UnsupportMessageContent from '../../../../wfc/messages/unsupportMessageConten';
-import wfc from '../../../../wfc/client/wfc'
-import UserInfo from '../../../../wfc/model/userInfo';
-import GroupInfo from '../../../../wfc/model/groupInfo';
-import NotificationMessageContent from '../../../../wfc/messages/notification/notificationMessageContent';
-import MessageStatus from '../../../../wfc/messages/messageStatus';
-import BenzAMRRecorder from 'benz-amr-recorder';
-import MessageConfig from '../../../../wfc/client/messageConfig';
-import UnknownMessageContent from '../../../../wfc/messages/unknownMessageContent';
-import EventType from '../../../../wfc/client/wfcEvent';
-import ConversationType from '../../../../wfc/model/conversationType';
+import classes from "./style.css";
+import Avatar from "components/Avatar";
+import PreviewImage from "./PreviewImage";
+import helper from "utils/helper";
+import { parser as emojiParse } from "utils/emoji";
+import { on, off } from "utils/event";
+import MessageContentType from "../../../../wfc/messages/messageContentType";
+import UnsupportMessageContent from "../../../../wfc/messages/unsupportMessageConten";
+import wfc from "../../../../wfc/client/wfc";
+import UserInfo from "../../../../wfc/model/userInfo";
+import GroupInfo from "../../../../wfc/model/groupInfo";
+import NotificationMessageContent from "../../../../wfc/messages/notification/notificationMessageContent";
+import MessageStatus from "../../../../wfc/messages/messageStatus";
+import BenzAMRRecorder from "benz-amr-recorder";
+import MessageConfig from "../../../../wfc/client/messageConfig";
+import UnknownMessageContent from "../../../../wfc/messages/unknownMessageContent";
+import EventType from "../../../../wfc/client/wfcEvent";
+import ConversationType from "../../../../wfc/model/conversationType";
 
-import GroupType from '../../../../wfc/model/groupType';
-import GroupMemberType from '../../../../wfc/model/groupMemberType';
-import FileSaver from 'file-saver';
-import InfiniteScroll from 'react-infinite-scroller';
-import nodePath from 'path';
+import GroupType from "../../../../wfc/model/groupType";
+import GroupMemberType from "../../../../wfc/model/groupMemberType";
+import FileSaver from "file-saver";
+import InfiniteScroll from "react-infinite-scroller";
+import nodePath from "path";
 
-@inject(stores => ({
+@inject((stores) => ({
     sticky: stores.sessions.sticky,
     empty: stores.chat.empty,
     removeChat: stores.sessions.removeConversation,
@@ -45,13 +52,13 @@ import nodePath from 'path';
         // 当天的消息，以每5分钟为一个跨度显示时间；
         // 消息超过1天、小于1周，显示为“星期 消息发送时间”；
         // 消息大于1周，显示为“日期 消息发送时间”。
-
     },
     reset: () => {
         //stores.chat.user = false;
     },
     isFriend: (id) => {
-        var user = stores.contacts.memberList.find(e => e.UserName === id) || {};
+        var user =
+            stores.contacts.memberList.find((e) => e.UserName === id) || {};
         return helper.isContact(user);
     },
     showUserinfo: async (isme, user) => {
@@ -61,22 +68,32 @@ import nodePath from 'path';
             if (groupInfo.target === wfc.getUserId()) {
                 caniremove = true;
             }
-            let groupMember = wfc.getGroupMember(groupInfo.target, wfc.getUserId());
+            let groupMember = wfc.getGroupMember(
+                groupInfo.target,
+                wfc.getUserId()
+            );
             if (groupInfo.type === GroupType.Restricted) {
-                if (!groupMember || groupMember.type === GroupMemberType.Normal) {
+                if (
+                    !groupMember ||
+                    groupMember.type === GroupMemberType.Normal
+                ) {
                     return;
                 }
             }
-
         }
         wfc.getUserInfo(user.uid, true);
 
-        stores.userinfo.toggle(true, stores.chat.conversation, user, caniremove);
+        stores.userinfo.toggle(
+            true,
+            stores.chat.conversation,
+            user,
+            caniremove
+        );
     },
     getMessage: (messageId) => {
         var list = stores.chat.messageList;
         messageId = Number(messageId);
-        return list.find(e => e.messageId === messageId);
+        return list.find((e) => e.messageId === messageId);
     },
     deleteMessage: (messageId) => {
         stores.chat.deleteMessage(messageId);
@@ -85,9 +102,15 @@ import nodePath from 'path';
         // TODO show channel members
         if (target instanceof GroupInfo) {
             let groupInfo = target;
-            let groupMember = wfc.getGroupMember(groupInfo.target, wfc.getUserId());
+            let groupMember = wfc.getGroupMember(
+                groupInfo.target,
+                wfc.getUserId()
+            );
             if (groupInfo.type === GroupType.Restricted) {
-                if (!groupMember || groupMember.type === GroupMemberType.Normal) {
+                if (
+                    !groupMember ||
+                    groupMember.type === GroupMemberType.Normal
+                ) {
                     return;
                 }
             }
@@ -95,7 +118,9 @@ import nodePath from 'path';
         }
     },
     showContact: (userid) => {
-        var user = stores.contacts.memberList.find(e => e.UserName === userid);
+        var user = stores.contacts.memberList.find(
+            (e) => e.UserName === userid
+        );
         stores.userinfo.toggle(true, user);
     },
     showForward: (message) => stores.forward.toggle(true, message),
@@ -106,7 +131,7 @@ import nodePath from 'path';
     showConversation: stores.chat.showConversation,
     toggleConversation: stores.chat.toggleConversation,
 }))
-@observer
+// @observer  mobx-react 传值，没用到先注释了
 export default class ChatContent extends Component {
     lastBottomMessage;
     isAudioPlaying = false;
@@ -168,16 +193,20 @@ export default class ChatContent extends Component {
                 }
 
                 // TODO
-                console.log('render voice message content', voice.duration);
+                console.log("render voice message content", voice.duration);
                 return `
-                    <div class="play-voice" style="width: ${width}px" data-voice="${voice.remotePath}">
+                    <div class="play-voice" style="width: ${width}px" data-voice="${
+                    voice.remotePath
+                }">
                         <i class="icon-ion-android-volume-up"></i>
                         <span>
-                            ${seconds || '60+'}"
+                            ${seconds || "60+"}"
                         </span>
 
                         <audio controls="controls">
-                            <source src="${voice.remotePath}"  type="audio/AMR" />
+                            <source src="${
+                                voice.remotePath
+                            }"  type="audio/AMR" />
                         </audio>
                     </div>
                 `;
@@ -209,8 +238,12 @@ export default class ChatContent extends Component {
                 let contact = message.contact;
                 let isFriend = this.props.isFriend(contact.UserName);
                 let html = `
-                    <div class="${clazz(classes.contact, {'is-friend': isFriend})}" data-userid="${contact.UserName}">
-                        <img src="${contact.image}" class="unload disabledDrag" />
+                    <div class="${clazz(classes.contact, {
+                        "is-friend": isFriend,
+                    })}" data-userid="${contact.UserName}">
+                        <img src="${
+                            contact.image
+                        }" class="unload disabledDrag" />
 
                         <div>
                             <p>${contact.name}</p>
@@ -224,7 +257,7 @@ export default class ChatContent extends Component {
                     `;
                 }
 
-                html += '</div>';
+                html += "</div>";
 
                 return html;
 
@@ -251,7 +284,7 @@ export default class ChatContent extends Component {
                 }
 
                 if (!video) {
-                    console.error('Invalid video message: %o', message);
+                    console.error("Invalid video message: %o", message);
 
                     return `
                         Receive an invalid video message, please see the console output.
@@ -291,7 +324,9 @@ export default class ChatContent extends Component {
                 /* eslint-disable */
                 return `
                     <div class="${classes.file}" data-id="${message.messageId}">
-                        <img src="assets/images/filetypes/${helper.getFiletypeIcon(file.extension)}" class="disabledDrag" />
+                        <img src="assets/images/filetypes/${helper.getFiletypeIcon(
+                            file.extension
+                        )}" class="disabledDrag" />
 
                         <div>
                             <p>${file.name}</p>
@@ -299,10 +334,12 @@ export default class ChatContent extends Component {
                         </div>
 
                         ${
-                    uploading
-                        ? '<i class="icon-ion-android-arrow-up"></i>'
-                        : (download ? '<i class="icon-ion-android-more-horizontal is-file"></i>' : '<i class="icon-ion-android-arrow-down is-download"></i>')
-                }
+                            uploading
+                                ? '<i class="icon-ion-android-arrow-up"></i>'
+                                : download
+                                ? '<i class="icon-ion-android-more-horizontal is-file"></i>'
+                                : '<i class="icon-ion-android-arrow-down is-download"></i>'
+                        }
                     </div>
                 `;
             /* eslint-enable */
@@ -321,21 +358,20 @@ export default class ChatContent extends Component {
                 let voip = message.messageContent;
                 let desc;
                 if (voip.status === 0) {
-                    desc = '对方未接听';
-
+                    desc = "对方未接听";
                 } else if (voip.status === 1) {
-                    desc = '通话中';
+                    desc = "通话中";
                 } else {
                     if (voip.connectTime && voip.connectedTime > 0) {
-                        let duration = (voip.endTime - voip.connectTime()) / 1000;
-                        desc = `通话时长: ${duration}`
-
+                        let duration =
+                            (voip.endTime - voip.connectTime()) / 1000;
+                        desc = `通话时长: ${duration}`;
                     } else {
-                        desc = '对方未接听';
+                        desc = "对方未接听";
                     }
                 }
                 // fixme me
-                desc = '视频通话';
+                desc = "视频通话";
 
                 return `
                     <div >
@@ -348,19 +384,27 @@ export default class ChatContent extends Component {
                 `;
             default:
                 let unknownMessageContent = message.messageContent;
-                console.log('unknown', unknownMessageContent.digest(message), message);
+                console.log(
+                    "unknown",
+                    unknownMessageContent.digest(message),
+                    message
+                );
                 return emojiParse(unknownMessageContent.digest(message));
         }
     }
 
     renderMessages(list, from) {
         //return list.data.map((e, index) => {
-        console.log('to render message count', list.length);
+        console.log("to render message count", list.length);
         return list.map((e) => {
             var message = e;
             let user;
             if (message.conversation.type === ConversationType.Group) {
-                user = wfc.getUserInfo(message.from, false, message.conversation.target);
+                user = wfc.getUserInfo(
+                    message.from,
+                    false,
+                    message.conversation.target
+                );
             } else {
                 user = wfc.getUserInfo(message.from);
             }
@@ -370,11 +414,19 @@ export default class ChatContent extends Component {
                 return (
                     <div
                         key={message.messageUid}
-                        className={clazz('unread', classes.message, classes.system)}
-                        dangerouslySetInnerHTML={{__html: message.messageContent.formatNotification(message)}}/>
+                        className={clazz(
+                            "unread",
+                            classes.message,
+                            classes.system
+                        )}
+                        dangerouslySetInnerHTML={{
+                            __html: message.messageContent.formatNotification(
+                                message
+                            ),
+                        }}
+                    />
                 );
             }
-
 
             // if (!user) {
             //     return false;
@@ -383,37 +435,54 @@ export default class ChatContent extends Component {
             return (
                 <div key={message.messageId}>
                     <div
-                        className={clazz('unread', classes.message, classes.system)}
+                        className={clazz(
+                            "unread",
+                            classes.message,
+                            classes.system
+                        )}
                         data-force-rerennder={message.forceRerender}
-                        dangerouslySetInnerHTML={{__html: helper.timeFormat(message.timestamp)}}/>
-                    <div className={clazz('unread', classes.message, {
-                        [classes.uploading]: message.status === MessageStatus.Sending,
+                        dangerouslySetInnerHTML={{
+                            __html: helper.timeFormat(message.timestamp),
+                        }}
+                    />
+                    <div
+                        className={clazz("unread", classes.message, {
+                            [classes.uploading]:
+                                message.status === MessageStatus.Sending,
 
-                        [classes.isme]: message.direction === 0,
-                        [classes.isText]: type === MessageContentType.Text || type === MessageContentType.P_Text || (message.messageContent instanceof UnknownMessageContent) || (message.messageContent instanceof UnsupportMessageContent),
-                        [classes.isLocation]: type === MessageContentType.Location,
-                        [classes.isImage]: type === MessageContentType.Image,
-                        [classes.isEmoji]: type === MessageContentType.Sticker,
-                        [classes.isVoice]: type === MessageContentType.Voice,
-                        [classes.isVideo]: type === MessageContentType.Video,
-                        [classes.isFile]: type === MessageContentType.File,
-                    })}>
-
+                            [classes.isme]: message.direction === 0,
+                            [classes.isText]:
+                                type === MessageContentType.Text ||
+                                type === MessageContentType.P_Text ||
+                                message.messageContent instanceof
+                                    UnknownMessageContent ||
+                                message.messageContent instanceof
+                                    UnsupportMessageContent,
+                            [classes.isLocation]:
+                                type === MessageContentType.Location,
+                            [classes.isImage]:
+                                type === MessageContentType.Image,
+                            [classes.isEmoji]:
+                                type === MessageContentType.Sticker,
+                            [classes.isVoice]:
+                                type === MessageContentType.Voice,
+                            [classes.isVideo]:
+                                type === MessageContentType.Video,
+                            [classes.isFile]: type === MessageContentType.File,
+                        })}
+                    >
                         <div>
-                            {
-                                this.userInfoLayout(user, message)
-                            }
+                            {this.userInfoLayout(user, message)}
 
                             <p
                                 className={classes.username}
                                 //dangerouslySetInnerHTML={{__html: user.DisplayName || user.RemarkName || user.NickName}}
-                                dangerouslySetInnerHTML={{__html: wfc.getUserDisplayName(user.uid)}}
+                                dangerouslySetInnerHTML={{
+                                    __html: wfc.getUserDisplayName(user.uid),
+                                }}
                             />
 
-                            {
-                                this.messageContentLayout(message)
-                            }
-
+                            {this.messageContentLayout(message)}
                         </div>
                     </div>
                 </div>
@@ -426,56 +495,86 @@ export default class ChatContent extends Component {
             return (
                 <Avatar
                     //src={message.isme ? message.HeadImgUrl : user.HeadImgUrl}
-                    src={user.portrait ? user.portrait : 'assets/images/user-fallback.png'}
+                    src={
+                        user.portrait
+                            ? user.portrait
+                            : "assets/images/user-fallback.png"
+                    }
                     className={classes.avatar}
-                    onContextMenu={e => this.showUserAction(user)}
-                    onClick={ev => this.props.showUserinfo(message.direction === 0, user)}
+                    onContextMenu={(e) => this.showUserAction(user)}
+                    onClick={(ev) =>
+                        this.props.showUserinfo(message.direction === 0, user)
+                    }
                 />
             );
         } else {
             return (
                 <div>
-                    <ContextMenuTrigger id={`user_item_${user.uid}_${message.messageId}`}>
+                    <ContextMenuTrigger
+                        id={`user_item_${user.uid}_${message.messageId}`}
+                    >
                         <Avatar
                             //src={message.isme ? message.HeadImgUrl : user.HeadImgUrl}
-                            src={user.portrait ? user.portrait : 'assets/images/user-fallback.png'}
+                            src={
+                                user.portrait
+                                    ? user.portrait
+                                    : "assets/images/user-fallback.png"
+                            }
                             className={classes.avatar}
-                            onClick={ev => this.props.showUserinfo(message.direction === 0, user)}
+                            onClick={(ev) =>
+                                this.props.showUserinfo(
+                                    message.direction === 0,
+                                    user
+                                )
+                            }
                         />
                     </ContextMenuTrigger>
-                    {
-                        this.showUserAction(user, `user_item_${user.uid}_${message.messageId}`)
-                    }
+                    {this.showUserAction(
+                        user,
+                        `user_item_${user.uid}_${message.messageId}`
+                    )}
                 </div>
             );
         }
-
     }
 
     messageContentLayout(message) {
         if (isElectron()) {
             return (
-                <div className={classes.content} data-message-id={message.messageId}
-                     onClick={e => this.handleClick(e)}>
+                <div
+                    className={classes.content}
+                    data-message-id={message.messageId}
+                    onClick={(e) => this.handleClick(e)}
+                >
                     <p
-                        onContextMenu={e => this.showMessageAction(message)}
-                        dangerouslySetInnerHTML={{__html: this.getMessageContent(message)}}/>
+                        onContextMenu={(e) => this.showMessageAction(message)}
+                        dangerouslySetInnerHTML={{
+                            __html: this.getMessageContent(message),
+                        }}
+                    />
                 </div>
             );
         } else {
             return (
                 <div>
                     <ContextMenuTrigger id={`menu_item_${message.messageId}`}>
-                        <div className={classes.content} data-message-id={message.messageId}
-                             onClick={e => this.handleClick(e)}>
+                        <div
+                            className={classes.content}
+                            data-message-id={message.messageId}
+                            onClick={(e) => this.handleClick(e)}
+                        >
                             <p
                                 // onContextMenu={e => this.showMessageAction(message)}
-                                dangerouslySetInnerHTML={{__html: this.getMessageContent(message)}}/>
+                                dangerouslySetInnerHTML={{
+                                    __html: this.getMessageContent(message),
+                                }}
+                            />
                         </div>
                     </ContextMenuTrigger>
-                    {
-                        this.showMessageAction(message, `menu_item_${message.messageId}`)
-                    }
+                    {this.showMessageAction(
+                        message,
+                        `menu_item_${message.messageId}`
+                    )}
                 </div>
             );
         }
@@ -500,33 +599,41 @@ export default class ChatContent extends Component {
         }
         messageId = Number(currentElement.dataset.messageId);
 
-        console.log('handle message click', messageId);
+        console.log("handle message click", messageId);
 
         // Open the image
-        if (target.tagName === 'IMG'
-            && target.classList.contains('open-image')) {
+        if (
+            target.tagName === "IMG" &&
+            target.classList.contains("open-image")
+        ) {
             let base64;
             let src;
-            if (target.src.startsWith('file') || target.src.startsWith('http')) {
+            if (
+                target.src.startsWith("file") ||
+                target.src.startsWith("http")
+            ) {
                 src = target.src;
             } else {
                 // thumbnail
-                if (target.src.startsWith('data')) {
-                    base64 = target.src.split(',')[1];
+                if (target.src.startsWith("data")) {
+                    base64 = target.src.split(",")[1];
                 }
                 src = target.dataset.remotePath;
             }
             // file
             if (src) {
                 // Get image from cache and convert to base64
-                let response = await axios.get(src, {responseType: 'arraybuffer'});
+                let response = await axios.get(src, {
+                    responseType: "arraybuffer",
+                });
                 // eslint-disable-next-line
-                base64 = Buffer.from(response.data, 'binary').toString('base64');
+                base64 = Buffer.from(response.data, "binary").toString(
+                    "base64"
+                );
             }
 
-
             if (false) {
-                ipcRenderer.send('open-image', {
+                ipcRenderer.send("open-image", {
                     dataset: target.dataset,
                     base64,
                 });
@@ -538,20 +645,22 @@ export default class ChatContent extends Component {
         }
 
         // Play the voice message
-        if (target.tagName === 'DIV'
-            && target.classList.contains('play-voice')) {
-            let audio = target.querySelector('audio');
-            let source = audio.querySelector('source');
+        if (
+            target.tagName === "DIV" &&
+            target.classList.contains("play-voice")
+        ) {
+            let audio = target.querySelector("audio");
+            let source = audio.querySelector("source");
             let voiceUrl = source.src;
 
             if (this.isAudioPlaying) {
-                console.log('pause current', this.isAudioPlaying);
+                console.log("pause current", this.isAudioPlaying);
                 let current = document.getElementsByClassName(classes.playing);
                 if (current.length > 0) {
-                    let currentAudio = current.item(0).querySelector('audio');
+                    let currentAudio = current.item(0).querySelector("audio");
                     currentAudio.pause();
                     currentAudio.currentTime = 0;
-                    currentAudio.classList.remove(classes.playing)
+                    currentAudio.classList.remove(classes.playing);
                     this.isAudioPlaying = false;
                     this.amr.stop();
                     this.amr = null;
@@ -571,11 +680,11 @@ export default class ChatContent extends Component {
                     this.isAudioPlaying = false;
                     // do not uncomment the following line
                     // this.amr = null;
-                    target.classList.remove(classes.playing)
+                    target.classList.remove(classes.playing);
                     audio.pause();
                     audio.currentTime = 0;
-                })
-                target.classList.add(classes.playing)
+                });
+                target.classList.add(classes.playing);
             };
             // audio不支持amr，所以下面两个回调不会走
             // audio.onended = () => {
@@ -583,19 +692,18 @@ export default class ChatContent extends Component {
             //     target.classList.remove(classes.playing)
             // };
             audio.onerror = (e) => {
-                target.classList.remove(classes.playing)
-                console.log('on error', e);
-            }
+                target.classList.remove(classes.playing);
+                console.log("on error", e);
+            };
             audio.play();
 
             return;
         }
 
         // Open the location
-        if (target.tagName === 'IMG'
-            && target.classList.contains('open-map')) {
+        if (target.tagName === "IMG" && target.classList.contains("open-map")) {
             if (isElectron()) {
-                ipcRenderer.send('open-map', {
+                ipcRenderer.send("open-map", {
                     map: target.dataset.map,
                 });
             } else {
@@ -604,51 +712,60 @@ export default class ChatContent extends Component {
         }
 
         // Show contact card
-        if (target.tagName === 'DIV'
-            && target.classList.contains('is-friend')) {
+        if (
+            target.tagName === "DIV" &&
+            target.classList.contains("is-friend")
+        ) {
             this.props.showContact(target.dataset.userid);
         }
 
         // Add new friend
-        if (target.tagName === 'I'
-            && target.classList.contains('icon-ion-android-add')) {
+        if (
+            target.tagName === "I" &&
+            target.classList.contains("icon-ion-android-add")
+        ) {
             this.props.showAddFriend({
-                UserName: target.dataset.userid
+                UserName: target.dataset.userid,
             });
         }
 
         // Add new friend
-        if (target.tagName === 'A'
-            && target.classList.contains('add-friend')) {
+        if (target.tagName === "A" && target.classList.contains("add-friend")) {
             this.props.showAddFriend({
-                UserName: target.dataset.userid
+                UserName: target.dataset.userid,
             });
         }
 
         // Open file & open folder
-        if (target.tagName === 'I'
-            && target.classList.contains('is-file')) {
-            let message = this.props.getMessage(e.target.parentElement.dataset.id);
+        if (target.tagName === "I" && target.classList.contains("is-file")) {
+            let message = this.props.getMessage(
+                e.target.parentElement.dataset.id
+            );
             let file = message.messageContent;
             this.showFileAction(file.localPath);
         }
 
         // Download file
-        if (target.tagName === 'I'
-            && target.classList.contains('is-download')) {
-            let message = this.props.getMessage(e.target.parentElement.dataset.id);
+        if (
+            target.tagName === "I" &&
+            target.classList.contains("is-download")
+        ) {
+            let message = this.props.getMessage(
+                e.target.parentElement.dataset.id
+            );
             let file = message.messageContent;
-            let response = await axios.get(file.remotePath, {responseType: 'arraybuffer'});
+            let response = await axios.get(file.remotePath, {
+                responseType: "arraybuffer",
+            });
             // eslint-disable-next-line
             if (isElectron()) {
-                let base64 = Buffer.from(response.data, 'binary').toString('base64');
-                let filename = ipcRenderer.sendSync(
-                    'file-download',
-                    {
-                        filename: `${message.messageId}_${file.name}`,
-                        raw: base64,
-                    },
+                let base64 = Buffer.from(response.data, "binary").toString(
+                    "base64"
                 );
+                let filename = ipcRenderer.sendSync("file-download", {
+                    filename: `${message.messageId}_${file.name}`,
+                    raw: base64,
+                });
                 file.localPath = filename;
 
                 wfc.updateMessageContent(message.messageId, file);
@@ -662,72 +779,85 @@ export default class ChatContent extends Component {
     showFileAction(path) {
         var templates = [
             {
-                label: 'Open file',
+                label: "Open file",
                 click: () => {
-                    ipcRenderer.send('open-file', path);
-                }
+                    ipcRenderer.send("open-file", path);
+                },
             },
             {
-                label: 'Open the folder',
+                label: "Open the folder",
                 click: () => {
-                    let dir = path.split(nodePath.sep).slice(0, -1).join(nodePath.sep);
-                    ipcRenderer.send('open-folder', dir);
-                }
+                    let dir = path
+                        .split(nodePath.sep)
+                        .slice(0, -1)
+                        .join(nodePath.sep);
+                    ipcRenderer.send("open-folder", dir);
+                },
             },
         ];
         popMenu(templates);
     }
 
     showUserAction(userInfo, menuId) {
-        if (this.props.conversation.type !== ConversationType.Group || userInfo.uid === wfc.getUserId()) {
+        if (
+            this.props.conversation.type !== ConversationType.Group ||
+            userInfo.uid === wfc.getUserId()
+        ) {
             return;
         }
 
         var templates = [
             {
-                label: `@${wfc.getGroupMemberDisplayName(this.props.conversation.target, userInfo.uid)}`,
+                label: `@${wfc.getGroupMemberDisplayName(
+                    this.props.conversation.target,
+                    userInfo.uid
+                )}`,
                 click: () => {
-                    wfc.eventEmitter.emit('mention', userInfo);
-                }
+                    wfc.eventEmitter.emit("mention", userInfo);
+                },
             },
         ];
         return popMenu(templates, userInfo, menuId);
     }
 
     showMessageAction(message, menuId) {
-
         if (message.messageContent instanceof NotificationMessageContent) {
             return;
         }
 
-        var caniforward = !(message.messageContent instanceof NotificationMessageContent)
+        var caniforward = !(
+            message.messageContent instanceof NotificationMessageContent
+        );
         var templates = [
             {
                 //label: 'Delete',
-                label: '删除',
+                label: "删除",
                 click: () => {
                     this.props.deleteMessage(message.messageId);
-                }
+                },
             },
         ];
 
         if (caniforward) {
             templates.unshift({
                 //label: 'Forward',
-                label: '转发',
+                label: "转发",
                 click: () => {
                     this.props.showForward(message);
-                }
+                },
             });
         }
 
-        if (message.direction === 0
-            && (Date.now() + wfc.getServerDeltaTime() - message.timestamp) < 2 * 60 * 1000) {
+        if (
+            message.direction === 0 &&
+            Date.now() + wfc.getServerDeltaTime() - message.timestamp <
+                2 * 60 * 1000
+        ) {
             templates.unshift({
-                label: 'Recall',
+                label: "Recall",
                 click: () => {
                     this.props.recallMessage(message);
-                }
+                },
             });
         }
 
@@ -741,34 +871,34 @@ export default class ChatContent extends Component {
         let covnersationInfo = wfc.getConversationInfo(this.props.conversation);
         var templates = [
             {
-                label: '全屏模式/正常模式',
+                label: "全屏模式/正常模式",
                 click: () => {
                     this.props.toggleConversation();
-                }
+                },
             },
             {
-                type: 'separator',
+                type: "separator",
             },
             {
-                label: '清空会话消息',
+                label: "清空会话消息",
                 click: () => {
                     this.props.empty(this.props.conversation);
-                }
+                },
             },
             {
-                type: 'separator'
+                type: "separator",
             },
             {
-                label: covnersationInfo.isTop ? '取消置顶' : '置顶',
+                label: covnersationInfo.isTop ? "取消置顶" : "置顶",
                 click: () => {
                     this.props.sticky(covnersationInfo);
-                }
+                },
             },
             {
-                label: '删除会话',
+                label: "删除会话",
                 click: () => {
                     this.props.removeChat(this.props.conversation);
-                }
+                },
             },
         ];
 
@@ -783,7 +913,7 @@ export default class ChatContent extends Component {
         var rect = viewport.getBoundingClientRect();
         var counter = 0;
 
-        const offset = 100 // 100 px before the request
+        const offset = 100; // 100 px before the request
         if (viewport.scrollTop < offset) {
             this.props.loadOldMessages();
         }
@@ -793,11 +923,11 @@ export default class ChatContent extends Component {
         //     wfc.eventEmitter.emit(EventType.ConversationInfoUpdate, this.props.conversation);
         // }
 
-        Array.from(unread).map(e => {
+        Array.from(unread).map((e) => {
             if (e.getBoundingClientRect().top > rect.bottom) {
                 counter += 1;
             } else {
-                e.classList.remove('unread');
+                e.classList.remove("unread");
             }
         });
 
@@ -810,7 +940,7 @@ export default class ChatContent extends Component {
     }
 
     componentWillMount() {
-        console.log('componentWillMount');
+        console.log("componentWillMount");
         wfc.eventEmitter.on(EventType.UserInfoUpdate, this.onUserInfoUpdate);
         wfc.eventEmitter.on(EventType.GroupInfoUpdate, this.onGroupInfoUpdate);
     }
@@ -820,8 +950,14 @@ export default class ChatContent extends Component {
         !this.props.rememberConversation && this.props.reset();
         this.stopAudio();
 
-        wfc.eventEmitter.removeListener(EventType.UserInfoUpdate, this.onUserInfoUpdate);
-        wfc.eventEmitter.removeListener(EventType.GroupInfoUpdate, this.onGroupInfoUpdate);
+        wfc.eventEmitter.removeListener(
+            EventType.UserInfoUpdate,
+            this.onUserInfoUpdate
+        );
+        wfc.eventEmitter.removeListener(
+            EventType.GroupInfoUpdate,
+            this.onGroupInfoUpdate
+        );
     }
 
     stopAudio() {
@@ -854,18 +990,24 @@ export default class ChatContent extends Component {
         } else if (target instanceof GroupInfo) {
             title = target.name;
         } else {
-            console.log('chatTo.........', target);
-            title = 'TODO';
+            console.log("chatTo.........", target);
+            title = "TODO";
         }
         return title;
     }
 
     render() {
-        var {loading, showConversation, messages, conversation, target} = this.props;
+        var {
+            loading,
+            showConversation,
+            messages,
+            conversation,
+            target,
+        } = this.props;
 
-        var signature = '点击查看群成员';
+        var signature = "点击查看群成员";
         if (target instanceof UserInfo) {
-            signature = '';
+            signature = "";
         }
 
         // maybe userName, groupName, ChannelName or ChatRoomName
@@ -875,85 +1017,106 @@ export default class ChatContent extends Component {
             <div
                 className={clazz(classes.container, {
                     [classes.hideConversation]: !showConversation,
-                })}>
-                {
-                    conversation ? (
-                        <div>
-                            <header>
-                                <div className={classes.info}>
-                                    <p
-                                        dangerouslySetInnerHTML={{__html: title}}
-                                        title={title}/>
+                })}
+            >
+                {conversation ? (
+                    <div>
+                        <header>
+                            <div className={classes.info}>
+                                <p
+                                    dangerouslySetInnerHTML={{ __html: title }}
+                                    title={title}
+                                />
 
-                                    <span
-                                        className={classes.signature}
-                                        dangerouslySetInnerHTML={{__html: signature || ''}}
-                                        onClick={e => this.props.showMembers(target)}
-                                        title={signature}/>
-                                </div>
-
-                                {
-                                    isElectron() ? (
-                                        <i
-                                            className="icon-ion-android-more-vertical"
-                                            onClick={() => this.showMenu()}/>
-                                    ) : ''
-                                }
-
-                            </header>
-
-                            <div
-                                className={classes.messages}
-                                // onScroll={e => this.handleScroll(e)}
-                                ref={(div) => {
-                                    this.messageList = div;
-                                }}>
-                                <InfiniteScroll
-                                    pageStart={0}
-                                    loadMore={this.loadFunc}
-                                    initialLoad={true}
-                                    isReverse={true}
-                                    hasMore={true}
-                                    loader={<div className="loader" key={0}>Loading ...</div>}
-                                    useWindow={false}
-                                >
-                                    {
-                                        //this.renderMessages(messages.get(user.UserName), user)
-                                        this.renderMessages(messages, target)
+                                <span
+                                    className={classes.signature}
+                                    dangerouslySetInnerHTML={{
+                                        __html: signature || "",
+                                    }}
+                                    onClick={(e) =>
+                                        this.props.showMembers(target)
                                     }
-                                </InfiniteScroll>
+                                    title={signature}
+                                />
                             </div>
-                        </div>
-                    ) : (
-                        <div className={clazz({
-                            [classes.noselected]: !target,
-                        })}>
-                            <img
-                                className="disabledDrag"
-                                src="assets/images/noselected.png"/>
-                            <h1>请选择会话 :(</h1>
-                        </div>
-                    )
-                }
 
-                <div
-                    className={classes.tips}
-                    ref="tips">
+                            {isElectron() ? (
+                                <i
+                                    className="icon-ion-android-more-vertical"
+                                    onClick={() => this.showMenu()}
+                                />
+                            ) : (
+                                ""
+                            )}
+                        </header>
+
+                        <div
+                            className={classes.messages}
+                            // onScroll={e => this.handleScroll(e)}
+                            ref={(div) => {
+                                this.messageList = div;
+                            }}
+                        >
+                            <InfiniteScroll
+                                pageStart={0}
+                                loadMore={this.loadFunc}
+                                initialLoad={true}
+                                isReverse={true}
+                                hasMore={true}
+                                // loader={
+                                //     <div className="loader" key={0}>
+                                //         Loading ...
+                                //     </div>
+                                // }
+                                useWindow={false}
+                            >
+                                {
+                                    //this.renderMessages(messages.get(user.UserName), user)
+                                    this.renderMessages(messages, target)
+                                }
+                            </InfiniteScroll>
+                        </div>
+                    </div>
+                ) : (
+                    <div
+                        className={clazz({
+                            [classes.noselected]: !target,
+                        })}
+                    >
+                        <img
+                            className="disabledDrag"
+                            src="assets/images/noselected.png"
+                        />
+                        <h1>请选择会话 :(</h1>
+                    </div>
+                )}
+
+                <div className={classes.tips} ref="tips">
                     Unread message.
                 </div>
-                <PreviewImage onRef={ref => (this.previewImage = ref)}/>
+                <PreviewImage onRef={(ref) => (this.previewImage = ref)} />
             </div>
         );
     }
 
     scrollToBottom = () => {
         if (this.props.messages && this.props.messages.length > 0) {
-            let currentBottomMessage = this.props.messages[this.props.messages.length - 1];
-            if (this.lastBottomMessage && this.lastBottomMessage.messageId === currentBottomMessage.messageId) {
-                console.log('not scroll to bottom', this.lastBottomMessage.messageId, currentBottomMessage.messageId);
+            let currentBottomMessage = this.props.messages[
+                this.props.messages.length - 1
+            ];
+            if (
+                this.lastBottomMessage &&
+                this.lastBottomMessage.messageId ===
+                    currentBottomMessage.messageId
+            ) {
+                console.log(
+                    "not scroll to bottom",
+                    this.lastBottomMessage.messageId,
+                    currentBottomMessage.messageId
+                );
                 return;
             }
-            console.log('scroll to bottom');
+            console.log("scroll to bottom");
             this.lastBottomMessage = currentBottomMessage;
         }
 
@@ -963,27 +1126,30 @@ export default class ChatContent extends Component {
             const maxScrollTop = scrollHeight - height;
             this.messageList.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
         }
-    }
+    };
 
     loadFunc = () => {
-        console.log('---------------loadFunc');
+        console.log("---------------loadFunc");
         this.props.loadOldMessages();
-    }
+    };
 
     onUserInfoUpdate = (userId) => {
         this.props.messages.map((c, index) => {
-            if (c.conversation.conversationType === ConversationType.Single && c.conversation.target === userId) {
+            if (
+                c.conversation.conversationType === ConversationType.Single &&
+                c.conversation.target === userId
+            ) {
                 // Todo update user info
             }
         });
-    }
+    };
 
     onGroupInfoUpdate = (groupId) => {
         // Todo update group info
-    }
+    };
 
     zeroPad(nr, base) {
-        var len = (String(base).length - String(nr).length) + 1;
-        return len > 0 ? new Array(len).join('0') + nr : nr;
+        var len = String(base).length - String(nr).length + 1;
+        return len > 0 ? new Array(len).join("0") + nr : nr;
     }
 }
