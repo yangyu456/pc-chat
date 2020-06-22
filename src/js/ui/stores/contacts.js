@@ -30,6 +30,10 @@ class Contacts {
     @observable tagList = [];
     @observable checkedList = [];
     @observable broadcastContent = "";
+    @observable broadCastGroupSelect = [];
+    @observable broadcastGroupMember = [];
+    @observable broadCastGroupSelectMain = [];
+    @observable broadcastGroupMemberMain = [];
     @observable filtered = {
         query: '',
         result: []
@@ -83,15 +87,21 @@ class Contacts {
 
     contactItemName(item) {
         //原代码，还原请解开这个注释
-        // var name = '';
+        var name = '';
         // if (item instanceof UserInfo) {
         //     name = wfc.getUserDisplayName(item.uid);
         // } else if (item instanceof GroupInfo) {
         //     name = item.name;
         // }
-        // return name
-
-        return item.name;
+        if (item.hasOwnProperty("uid")) {
+            // 如果是用户
+            name = item.name
+        } else if (item.hasOwnProperty("groupName")) {
+            //如果是自定义分组
+            name = item.groupName;
+        }
+        return name;
+        // return item.name;
     }
 
     // TODO refactor to getContact, and the return mayby userInfo, GroupInfo 
@@ -210,6 +220,7 @@ class Contacts {
     }
 
     @action filter(text = '', showall = false) {
+        let textTemp = text;
         text = pinyin.letter(text.toLocaleLowerCase(), '', null);
         var list = self.memberList.filter(e => {
             let name = self.contactItemName(e);
@@ -227,7 +238,7 @@ class Contacts {
         }
 
         self.filtered = {
-            query: text,
+            query: textTemp,
             result: list.length ? self.group(list, showall) : []
         };
     }
@@ -374,47 +385,6 @@ class Contacts {
         return (window.checkedList = self.checkedList);
     }
 
-    @action updateCheckedListBroad(item) {
-        let bol = false;
-        let checkedListtmp = self.checkedList;
-        for (var i = 0; i < checkedListtmp.length; i++) {
-            if (checkedListtmp[i].username == item.username) {
-                // 如果选中,则取消选中
-                let enabled = "0";
-                if (checkedListtmp[i].enabled == "1") {
-                    checkedListtmp[i].enabled = "0";
-                } else {
-                    enabled = "1";
-                    checkedListtmp[i].enabled = "1";
-                }
-                bol = true;
-                // 更新个人自定义分组下的成员
-                let updateMember = {
-                    "id": self.tagId,
-                    "showIndex": "0",
-                    "enabled": enabled,
-                    "username": item.username,
-                    "uid":item.uid
-                };
-                checkedListtmp.push(newMember);
-                break;
-            }
-        }
-        //添加个人自定义分组下的成员
-        if (!bol) {
-            let newMember = {
-                "username": item.username,
-                "groupId": self.tagId,
-                "showIndex": 0,
-                "enabled": "1",
-                "uid":item.uid
-            };
-            checkedListtmp.push(newMember);
-        }
-        self.checkedList = checkedListtmp;
-        return (window.checkedList = self.checkedList);
-    }
-
     @action async saveUpdate() {
         //保存分组并关闭编辑分组
         self.loading = true;
@@ -517,7 +487,10 @@ class Contacts {
             return null;
         }
         let userIds = [];
-        self.checkedList.forEach((v,i) => {
+        self.broadcastGroupMemberMain.forEach((v,i) => {
+            userIds.push(v.uid);
+        });
+        self.broadcastGroupMember.forEach((v,i) => {
             userIds.push(v.uid);
         });
         if(userIds.length==0){
@@ -544,15 +517,209 @@ class Contacts {
                     break;
             }
         }
+        self.broadcastGroupMember = [];
+        self.broadcastGroupMemberMain = [];
+        self.broadCastGroupSelect = [];
+        self.broadCastGroupSelectMain = [];
         self.broadCastShow = false;
         self.broadcastContent = "";
         self.tagShow = false;
     }
 
     @action backBroadcast() {
+        self.broadcastGroupMember = [];
+        self.broadcastGroupMemberMain = [];
+        self.broadCastGroupSelect = [];
+        self.broadCastGroupSelectMain = [];
         self.broadCastShow = false;
         self.broadcastContent = "";
         self.tagShow = false;
+    }
+
+    @action toggleSelectGroup(groupId,users) {
+        if (!self.broadCastGroupSelect.includes(groupId)) {
+            // Add
+            self.addSelected(groupId,users);
+        } else {
+            // Remove
+            self.removeSelected(groupId,users);
+        }
+    }
+
+    @action toggleSelectGroupMain(prefix,users) {
+        if (!self.broadCastGroupSelectMain.includes(prefix)) {
+            // Add
+            self.addSelectedMain(prefix,users);
+        } else {
+            // Remove
+            self.removeSelectedMain(prefix,users);
+        }
+    }
+
+    @action toggleSelectGroupMember(member,groupId) {
+        member.groupId = groupId;
+        let result = self.broadcastGroupMember.some(item=>{
+            if(item.uid==member.uid&&item.groupId==member.groupId){
+                return true;
+            }
+        });
+        if(!result){
+            self.addSelectedMember(member);  
+        } else {
+            self.removeSelectedMember(member);  
+        }
+    }
+
+    @action toggleSelectGroupMemberMain(member,groupId) {
+        member.groupId = groupId;
+        let result = self.broadcastGroupMemberMain.some(item=>{
+            if(item.uid==member.uid&&item.groupId==member.groupId){
+                return true;
+            }
+        });
+        if(!result){
+            self.addSelectedMemberMain(member);  
+        } else {
+            self.removeSelectedMemberMain(member);  
+        }
+    }
+
+    @action toggleAddGroupMember(member,groupId) {
+        member.groupId = groupId;
+        let result = self.broadcastGroupMember.some(item=>{
+            if(item.uid==member.uid&&item.groupId==member.groupId){
+                return true;
+            }
+        });
+        if(!result){
+            self.addSelectedMember(member);  
+        } else {
+            return null;
+        }
+    }
+
+    @action toggleAddGroupMemberMain(member,groupId) {
+        member.groupId = groupId;
+        let result = self.broadcastGroupMemberMain.some(item=>{
+            if(item.uid==member.uid&&item.groupId==member.groupId){
+                return true;
+            }
+        });
+        if(!result){
+            self.addSelectedMemberMain(member);  
+        } else {
+            return null;
+        }
+    }
+
+    @action addSelected(groupId,users) {
+        let selected = [
+            groupId,
+            ...self.broadCastGroupSelect,
+        ];
+        self.broadCastGroupSelect = selected;
+        users.forEach(v => {
+            //批量添加组内人员选中
+            self.toggleAddGroupMember(v,groupId);
+        });
+    }
+
+    @action addSelectedMain(groupId,users) {
+        let selected = [
+            groupId,
+            ...self.broadCastGroupSelectMain,
+        ];
+        self.broadCastGroupSelectMain = selected;
+        users.forEach(v => {
+            //批量添加组内人员选中
+            self.toggleAddGroupMemberMain(v,groupId);
+        });
+    }
+
+    @action removeSelected(groupId,users) {
+        let selected = self.broadCastGroupSelect;
+        let index = selected.indexOf(groupId);
+        selected = [
+            ...selected.slice(0, index),
+            ...selected.slice(index + 1, selected.length)
+        ];
+        self.broadCastGroupSelect = selected;
+        self.removeByGroupId(groupId);
+    }
+
+    @action removeSelectedMain(groupId,users) {
+        let selected = self.broadCastGroupSelectMain;
+        let index = selected.indexOf(groupId);
+        selected = [
+            ...selected.slice(0, index),
+            ...selected.slice(index + 1, selected.length)
+        ];
+        self.broadCastGroupSelectMain = selected;
+        self.removeByGroupIdMain(groupId);
+    }
+
+    @action addSelectedMember(member) {
+        let selected = [
+            member,
+            ...self.broadcastGroupMember,
+        ];
+        self.broadcastGroupMember = selected;
+    }
+
+    @action addSelectedMemberMain(member) {
+        let selected = [
+            member,
+            ...self.broadcastGroupMemberMain,
+        ];
+        self.broadcastGroupMemberMain = selected;
+    }
+
+    @action removeSelectedMember(member) {
+        let selected = self.broadcastGroupMember;
+        selected.forEach((v,index) => {
+            if(v.uid==member.uid&&v.groupId==member.groupId){
+                selected = [
+                    ...selected.slice(0, index),
+                    ...selected.slice(index + 1, selected.length)
+                ];
+            }
+        });
+        self.broadcastGroupMemberMain = selected;
+    }
+
+    @action removeSelectedMemberMain(member) {
+        let selected = self.broadcastGroupMemberMain;
+        selected.forEach((v,index) => {
+            if(v.uid==member.uid&&v.groupId==member.groupId){
+                selected = [
+                    ...selected.slice(0, index),
+                    ...selected.slice(index + 1, selected.length)
+                ];
+            }
+        });
+        self.broadcastGroupMemberMain = selected;
+    }
+
+    @action removeByGroupId(groupId) {
+        let selected = self.broadcastGroupMember;
+        let newSelected = [];
+        selected.forEach(v => {
+            if(v.groupId!=groupId){
+                newSelected.push(v);
+            }
+        });
+        self.broadcastGroupMember = newSelected;
+    }
+
+    @action removeByGroupIdMain(groupId) {
+        let selected = self.broadcastGroupMemberMain;
+        let newSelected = [];
+        selected.forEach(v => {
+            if(v.groupId!=groupId){
+                newSelected.push(v);
+            }
+        });
+        self.broadcastGroupMemberMain = newSelected;
     }
 
     @action async deleteUser(id) {

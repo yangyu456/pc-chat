@@ -1,18 +1,30 @@
 import wfc from "./wfc/client/wfc";
 
 export function isElectron() {
-    // Renderer process
-    if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process.type === 'renderer') {
+    // Renderer process 渲染进程
+    if (
+        typeof window !== "undefined" &&
+        typeof window.process === "object" &&
+        window.process.type === "renderer"
+    ) {
         return true;
     }
 
-    // Main process
-    if (typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron) {
+    // Main process 主过程
+    if (
+        typeof process !== "undefined" &&
+        typeof process.versions === "object" &&
+        !!process.versions.electron
+    ) {
         return true;
     }
 
-    // Detect the user agent when the `nodeIntegration` option is set to true
-    if (typeof navigator === 'object' && typeof navigator.userAgent === 'string' && navigator.userAgent.indexOf('Electron') >= 0) {
+    // Detect the user agent when the `nodeIntegration` option is set to true 当“nodeIntegration”选项设置为真时检测用户代理
+    if (
+        typeof navigator === "object" &&
+        typeof navigator.userAgent === "string" &&
+        navigator.userAgent.indexOf("Electron") >= 0
+    ) {
         return true;
     }
 
@@ -29,7 +41,7 @@ export function popMenu(templates, data, menuId) {
         return showBrowserMenu(templates, data, menuId);
     }
 }
-
+// 展示浏览器菜单
 export function showBrowserMenu(menuTemplates = [], data, menuId) {
     let items = menuTemplates.map((template) => {
         return (
@@ -38,13 +50,7 @@ export function showBrowserMenu(menuTemplates = [], data, menuId) {
             </MenuItem>
         );
     });
-    return (
-        <ContextMenu id={menuId} >
-            {
-                items
-            }
-        </ContextMenu>
-    );
+    return <ContextMenu id={menuId}>{items}</ContextMenu>;
 }
 
 export function connect(userId, token) {
@@ -52,15 +58,15 @@ export function connect(userId, token) {
 }
 
 // pc
-export const remote = require('electron').remote;
-export const ipcRenderer = require('electron').ipcRenderer;
-export const ipcMain = require('electron').ipcMain;
-export const fs = require('file-system').fs;
-export const currentWindow = require('electron').remote.getCurrentWindow();
-export const BrowserWindow = require('electron').remote.BrowserWindow;
-export const AppPath = require('electron').remote.app.getAppPath();
+export const remote = require("electron").remote;
+export const ipcRenderer = require("electron").ipcRenderer;
+export const ipcMain = require("electron").ipcMain;
+export const fs = require("file-system").fs;
+export const currentWindow = require("electron").remote.getCurrentWindow();
+export const BrowserWindow = require("electron").remote.BrowserWindow;
+export const AppPath = require("electron").remote.app.getAppPath();
 
 // for web
 export const ContextMenuTrigger = null;
-export function hideMenu() { }
+export function hideMenu() {}
 export const PostMessageEventEmitter = null;

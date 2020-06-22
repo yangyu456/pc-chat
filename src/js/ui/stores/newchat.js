@@ -37,7 +37,7 @@ class NewChat {
             // }
 
             // return helper.isContact(e) && res;
-            return e instanceof UserInfo && res;
+            return e.hasOwnProperty("uid") && res;
         });
 
         self.query = text;

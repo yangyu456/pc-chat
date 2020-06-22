@@ -99,7 +99,7 @@ import nodePath from "path";
         stores.chat.deleteMessage(messageId);
     },
     showMembers: (target) => {
-        // TODO show channel members
+        // TODO show channel members 展示渠道成员
         if (target instanceof GroupInfo) {
             let groupInfo = target;
             let groupMember = wfc.getGroupMember(
@@ -131,7 +131,8 @@ import nodePath from "path";
     showConversation: stores.chat.showConversation,
     toggleConversation: stores.chat.toggleConversation,
 }))
-// @observer  mobx-react 传值，没用到先注释了
+//   mobx-react 传值，即时跟新对话消息的，观察者\
+@observer
 export default class ChatContent extends Component {
     lastBottomMessage;
     isAudioPlaying = false;
@@ -396,7 +397,7 @@ export default class ChatContent extends Component {
     renderMessages(list, from) {
         //return list.data.map((e, index) => {
         console.log("to render message count", list.length);
-        return list.map((e) => {
+        return list.map((e, index) => {
             var message = e;
             let user;
             if (message.conversation.type === ConversationType.Group) {
@@ -433,7 +434,7 @@ export default class ChatContent extends Component {
             // }
 
             return (
-                <div key={message.messageId}>
+                <div key={index}>
                     <div
                         className={clazz(
                             "unread",
@@ -477,9 +478,9 @@ export default class ChatContent extends Component {
                             <p
                                 className={classes.username}
                                 //dangerouslySetInnerHTML={{__html: user.DisplayName || user.RemarkName || user.NickName}}
-                                dangerouslySetInnerHTML={{
-                                    __html: wfc.getUserDisplayName(user.uid),
-                                }}
+                                // dangerouslySetInnerHTML={{
+                                //     __html: wfc.getUserDisplayName(user.uid),
+                                // }}
                             />
 
                             {this.messageContentLayout(message)}
@@ -775,7 +776,7 @@ export default class ChatContent extends Component {
             }
         }
     }
-
+    // 显示文件功能
     showFileAction(path) {
         var templates = [
             {
@@ -938,7 +939,7 @@ export default class ChatContent extends Component {
             tips.classList.remove(classes.show);
         }
     }
-
+    // 组件渲染
     componentWillMount() {
         console.log("componentWillMount");
         wfc.eventEmitter.on(EventType.UserInfoUpdate, this.onUserInfoUpdate);
@@ -1063,6 +1064,8 @@ export default class ChatContent extends Component {
                                 initialLoad={true}
                                 isReverse={true}
                                 hasMore={true}
+                                key={0}
+                                // 对话页面显示 Loading ... 先注释了
                                 // loader={
                                 //     <div className="loader" key={0}>
                                 //         Loading ...

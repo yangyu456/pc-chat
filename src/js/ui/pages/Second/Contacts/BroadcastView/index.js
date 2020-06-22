@@ -16,6 +16,7 @@ import { store } from 'emoji-mart';
         user = wfc.getUserInfo(user.uid, true);
         stores.contactInfo.toggle(show, user);
     },
+    expand: stores.contacts.expand,
     contactItemName: stores.contacts.contactItemName,
     updateCheckedListBroad: stores.contacts.updateCheckedListBroad,
     event: stores.wfc.eventEmitter,
@@ -23,22 +24,32 @@ import { store } from 'emoji-mart';
     saveBroadcast: stores.contacts.saveBroadcast,
     inputBroadCast: stores.contacts.inputBroadCast,
     broadcastContent: stores.contacts.broadcastContent,
-    backBroadcast:stores.contacts.backBroadcast
+    backBroadcast:stores.contacts.backBroadcast,
+    tagList:stores.contacts.tagList,
+    broadCastGroupSelect:stores.contacts.broadCastGroupSelect,
+    toggleSelectGroup:stores.contacts.toggleSelectGroup,
+    toggleSelectGroupMember:stores.contacts.toggleSelectGroupMember,
+    broadcastGroupMember:stores.contacts.broadcastGroupMember,
+    toggleSelectGroupMain:stores.contacts.toggleSelectGroupMain,
+    toggleSelectGroupMemberMain:stores.contacts.toggleSelectGroupMemberMain,
+    broadcastGroupMemberMain:stores.contacts.broadcastGroupMemberMain
 }))
 @observer
-export default class TagView extends Component {
-    renderColumns(data, index, query) {
+export default class BroadcastView extends Component {
+    renderColumns(data, index, query ,selectedListMember) {
         var list = data.filter((e, i) => i % 1 === index);
         return list.map((e, index) => {
+            let groupId = e.prefix;
             return (
                 <div
                     className={classes.group}
                     key={index}>
-                    {/* { <div className={classes.header}>
+                    <div className={classes.header}>
                         <label>
                             {e.prefix}
                         </label>
-                        <img className={classes.icon}></img>
+                        <CheckBox style={{paddingLeft:'70%'}} className={classes.tagCheck} onClick={() => this.toggleSelectGroupMain(e.prefix,e.list)}></CheckBox>
+                        <img onClick={() => this.changeUp(e)} className={classes.icon} src={e.expand ? 'assets/images/extract.png' : 'assets/images/expand.png'}></img>
                         <span style={{
                             position: 'absolute',
                             left: 0,
@@ -46,12 +57,18 @@ export default class TagView extends Component {
                             height: 1,
                             width: '100%',
                             background: '#eaedea',
-                        }}/>
-                    </div> } */}
+                        }} />
+                    </div>
 
-                    <div className={classes.list}>
+                    <div className={e.expand ? classes.list : classes.hiddenlist}>
                         {
                             e.list.map((e, index) => {
+                                let bol = false;
+                                selectedListMember.forEach(element => {
+                                    if(element.uid == e.uid){
+                                        bol = true;
+                                    }
+                                });
                                 return (
                                     <div
                                         className={classes.item}
@@ -76,8 +93,8 @@ export default class TagView extends Component {
                                                 dangerouslySetInnerHTML={{ __html: this.props.contactItemName(e) }} />
                                             {
                                                 <CheckBox
-                                                    className={classes.tagCheck}
-                                                    onClick={() => this.checkHandler(e)}
+                                                    className={classes.tagCheck} checked={bol?'checked':''}
+                                                    onClick={() => this.toggleSelectGroupMemberMain(e,groupId)}
                                                 />
                                             }
                                         </div>
@@ -90,9 +107,76 @@ export default class TagView extends Component {
             );
         });
     }
+    
+    renderGroupList(list,selectedList,selectedListMember){
+        return list.map((e, index) => {
+            let groupId = e.id;
+            return (<div className={classes.group} key={e.id}>
+                <div className={classes.header}>
+                    <label>{e.groupName}</label>
+                    <CheckBox style={{paddingLeft:'80%'}} className={classes.tagCheck} onClick={() => this.toggleSelectGroup(groupId,e.users)}></CheckBox>
+                </div>
+                {e.users.map((e) => {
+                    let bol = false;
+                    selectedListMember.forEach(element => {
+                        if(element.uid == e.uid && element.groupId == groupId){
+                            bol = true;
+                        }
+                    });
+                    return (
+                    <div
+                        className={classes.item}
+                        key={e.uid}
+                        onClick={() => {
+                            //if (query) {
+                            //    this.filter('')
+                            //}
+                            this.props.showUserinfo(true, e)
+                        }}>
+                        <div className={classes.avatar}>
+                            <img
+                                src={this.itemPortrait(e)}
+                                style={{
+                                    height: 32,
+                                    width: 32,
+                                }} />
+                        </div>
+                        <div className={classes.info}>
+                            <p
+                                className={classes.username}
+                            >{e.name}</p>
+                            <CheckBox
+                                className={classes.tagCheck} checked={bol?'checked':''}
+                                onClick={() => this.toggleSelectGroupMember(e,groupId)}
+                            />
+                        </div>
+                    </div>);
+                })}
+            </div>);
+        });
+    }
 
-    checkHandler(e) {
-        this.props.updateCheckedListBroad(e);
+    toggleSelectGroup(groupId,users){
+        this.props.toggleSelectGroup(groupId,users);
+    }
+
+    toggleSelectGroupMember(e,groupId){
+        //勾选取消勾选自定义分组内的成员
+        this.props.toggleSelectGroupMember(e,groupId);
+    }
+
+    toggleSelectGroupMain(prefix,users){
+        this.props.toggleSelectGroupMain(prefix,users);
+    }
+
+    toggleSelectGroupMemberMain(e,groupId) {
+        this.props.toggleSelectGroupMemberMain(e,groupId);
+    }
+
+    changeUp(e) {//展开收起分组
+        let prefix = e.prefix;
+        let expandFlag = !e.expand;
+        this.props.expand(prefix, expandFlag, "");
     }
 
     inputBroadCast(text = '') {
@@ -141,7 +225,11 @@ export default class TagView extends Component {
 
     render() {
         var { query, result } = this.props.filtered;
+        var tagList = this.props.tagList;
         var broadcastContent = this.props.broadcastContent;
+        var selectedList = this.props.broadCastGroupSelect;
+        var selectedListMember = this.props.broadcastGroupMember;
+        var selectedListMemberMain = this.props.broadcastGroupMemberMain;
         return (
             <div className={classes.container}>
                 <div className={classes.searchBar}>
@@ -152,7 +240,7 @@ export default class TagView extends Component {
                         value={broadcastContent ? broadcastContent : ''}
                         placeholder='请输入广播内容...'
                         ref="broadcast"
-                        row="4">
+                        row="5">
                     </textarea>
                     <div className={classes.btnGroup}>
                         <button type="button" className={classes.broadBackBtn} onClick={() => this.backBroadcast()}>返回</button>
@@ -161,7 +249,8 @@ export default class TagView extends Component {
                 </div>
                 <div className={classes.contacts}
                     ref="container" style={{paddingTop:'30px'}}>
-                    {this.renderColumns(result, 0, query)}
+                    {this.renderGroupList(tagList,selectedList,selectedListMember)}
+                    {this.renderColumns(result, 0, query , selectedListMemberMain)}
                 </div>
             </div>
         )

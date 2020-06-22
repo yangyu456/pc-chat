@@ -147,18 +147,18 @@ export default class UserList extends Component {
             return (
                 <li className={classes.notfound}>
                     <img src="assets/images/crash.png" />
-                    <h3>Can't find any people matching '{searching}'</h3>
+                    <h3>未能找到与关键字 '{searching}'相符的用户</h3>
                 </li>
             );
         }
-        list = list.filter(e => e instanceof UserInfo);
+        list = list.filter(e => e.hasOwnProperty("uid"));
 
         return list.map((e, index) => {
             return (
                 <li
                     className={clazz({
-                        [classes.selected]: this.state.selected.includes(e.UserName),
-                        [classes.active]: this.state.active === e.UserName,
+                        [classes.selected]: this.state.selected.includes(e.uid),
+                        [classes.active]: this.state.active === e.uid,
                     })}
                     data-userid={e.uid}
                     key={index}
@@ -168,7 +168,7 @@ export default class UserList extends Component {
                         src={e.portrait} />
                     <span
                         className={classes.username}
-                        dangerouslySetInnerHTML={{ __html: wfc.getUserDisplayName(e.uid) }} />
+                        dangerouslySetInnerHTML={{ __html: e.name }} />
 
                     <i className="icon-ion-android-done-all" />
                 </li>
@@ -183,7 +183,7 @@ export default class UserList extends Component {
                     autoFocus={true}
                     onKeyUp={e => this.navigation(e)}
                     onInput={e => this.search(e.target.value)}
-                    placeholder="Type to Search..."
+                    placeholder="在此输入关键字检索"
                     ref="input"
                     type="text" />
 

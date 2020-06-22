@@ -129,7 +129,7 @@ export default class NewChat extends Component {
                 onCancel={e => this.props.close()}
                 show={this.props.show}>
                 <ModalBody className={classes.container}>
-                    New Chat ({this.state.selected.length} / 20)
+                    发起聊天 ({this.state.selected.length} / 20)
 
                     <div className={classes.avatars}>
                         {

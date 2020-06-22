@@ -1,34 +1,50 @@
-
 .container h1 {
-    height: 40px;
-    line-height: 40px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    /* height: 40px;
+    line-height: 40px; */
+    height: 100vh;
+    line-height: 100vh;
     margin: 0;
     padding: 0;
     font-size: 16px;
     font-family: "system-ui";
     font-weight: normal;
-    width: 100%;
+    /* width: 100%; */
+    width: 80px;
     color: #fff;
     text-align: center;
     background: rgba(255, 255, 255, 1);
     -webkit-user-select: none;
     -webkit-app-region: drag;
     cursor: default;
-    background-color: #4377B0;
+    background-color: #4377b0;
 }
 
-.container div {   
+.container aside {
+    width: 80px;
+    height: 200px;
+    background-color: red;
+    margin-top: 43px;
+}
+
+.container div {
     position: fixed;
-    right: 30px;
-    top: -5px;
+    /* right: 30px;
+    top: -5px; */
+    left: 0;
+    top: 0;
     -webkit-app-region: no-drag;
 }
 
-.container p {    
+.container p {
     color: #fff;
     cursor: pointer;
-    padding-left: 10px;
-    padding-right: 15px;
+    /* padding-left: 10px; */
+    /* padding-right: 15px; */
+    padding-left: 4px;
+    padding-right: 3px;
     display: inline-block;
 }
 

@@ -1,11 +1,10 @@
+import React, { Component } from "react";
+import { Modal, ModalBody } from "components/Modal";
+import { inject, observer } from "mobx-react";
 
-import React, { Component } from 'react';
-import { Modal, ModalBody } from 'components/Modal';
-import { inject, observer } from 'mobx-react';
+import classes from "./style.css";
 
-import classes from './style.css';
-
-@inject(stores => {
+@inject((stores) => {
     var confirmImagePaste = stores.confirmImagePaste;
 
     return {
@@ -19,7 +18,7 @@ import classes from './style.css';
         cancel: () => {
             confirmImagePaste.cancel();
             confirmImagePaste.toggle(false);
-        }
+        },
     };
 })
 @observer
@@ -28,18 +27,14 @@ export default class ConfirmImagePaste extends Component {
         var { show, cancel, ok, image } = this.props;
 
         return (
-            <Modal
-                fullscreen={true}
-                show={show}>
+            <Modal fullscreen={true} show={show}>
                 <ModalBody className={classes.container}>
                     是否发送？
-
                     <img src={image} />
-
                     <div>
-                        <button onClick={e => ok()}>发送</button>
+                        <button onClick={(e) => ok()}>发送</button>
 
-                        <button onClick={e => cancel()}>取消</button>
+                        <button onClick={(e) => cancel()}>取消</button>
                     </div>
                 </ModalBody>
             </Modal>

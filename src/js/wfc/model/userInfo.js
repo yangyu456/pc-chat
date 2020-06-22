@@ -19,6 +19,7 @@
 export default class UserInfo {
     uid = '';
     name = '';
+    // username = '';
     displayName = '';
     gender = 0;
     portrait = '';
@@ -28,6 +29,7 @@ export default class UserInfo {
     social = '';
     extra = '';
     type = 0; //0 normal; 1 robot; 2 thing;
+    // usertype = '';
     updateDt = 1550652404513;
 
     hello(){

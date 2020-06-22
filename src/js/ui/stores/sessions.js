@@ -118,6 +118,7 @@ class sessions {
             };
             return;
         }
+        var textTemp = text;
         text = pinyin.letter(text.toLocaleLowerCase(), '', null);
         var list = self.conversations.filter(c => {
             let name = c.title();
@@ -126,7 +127,7 @@ class sessions {
             return res;
         });
         self.filtered = {
-            query: text,
+            query: textTemp,
             result: list.length ? list : []
         };
     }

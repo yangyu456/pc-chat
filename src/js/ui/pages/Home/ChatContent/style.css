@@ -145,6 +145,12 @@
     &:not(.isme) img + p.username {
         opacity: 1;
     }
+
+    & .avatar {
+        position: absolute;
+        top: -6px;
+        left: -16px;
+    }
 }
 
 .message.system {
@@ -175,7 +181,7 @@
     & p {
         min-width: 47px;
         margin: 0;
-        padding: 5px 30px 5px 15px;
+        padding: 5px 20px 5px 15px;
         font-family: "Helvetica";
         font-size: 14px;
         color: #777;
@@ -739,7 +745,7 @@
     .message {
         max-width: calc(100% - 24px - 36px);
         padding: 0 24px;
-        margin-bottom: 14px;
+        margin-bottom: 4px;
 
         & > div {
             position: relative;

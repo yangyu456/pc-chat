@@ -1,17 +1,16 @@
-import Conversation from '../model/conversation';
-import {EventEmitter} from 'events';
-import MessageStatus from '../messages/messageStatus';
-import MessageContent from '../messages/messageContent';
-import atob from 'atob';
-import btoa from 'btoa';
+import Conversation from "../model/conversation";
+import { EventEmitter } from "events";
+import MessageStatus from "../messages/messageStatus";
+import MessageContent from "../messages/messageContent";
+import atob from "atob";
+import btoa from "btoa";
 
-import impl from '../proto/proto.min';
+import impl from "../proto/proto.min";
 import Config from "../../config";
 import avenginekit from "../av/engine/avenginekitproxy";
 
 // 其实就是imclient，后续可能需要改下名字
 export class WfcManager {
-
     eventEmitter = new EventEmitter();
 
     constructor() {
@@ -37,7 +36,7 @@ export class WfcManager {
     getServerDeltaTime() {
         return impl.getServerDeltaTime();
     }
-
+    // 屏幕截屏
     screenShot() {
         return impl.screenShot();
     }
@@ -49,33 +48,49 @@ export class WfcManager {
     getConnectionStatus() {
         return impl.getConnectionStatus();
     }
-
+    // 获取我的群名单
     getMyGroupList() {
         return impl.getMyGroupList();
     }
-
+    // 获取用户显示名称
     getUserDisplayName(userId) {
         let userInfo = this.getUserInfo(userId, false);
         if (!userInfo) {
-            return '<' + userId + '>';
+            return "<" + userId + ">";
         }
-        return userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userId + '>');
+        return userInfo.friendAlias
+            ? userInfo.friendAlias
+            : userInfo.displayName
+            ? userInfo.displayName
+            : "<" + userId + ">";
     }
-
+    // 获取分组显示名称
     getGroupMemberDisplayName(groupId, userId) {
         let userInfo = this.getUserInfo(userId, false, groupId);
         if (!userInfo) {
-            return '<' + userId + '>';
+            return "<" + userId + ">";
         }
 
-        return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userId + '>'))
+        return userInfo.groupAlias
+            ? userInfo.groupAlias
+            : userInfo.friendAlias
+            ? userInfo.friendAlias
+            : userInfo.displayName
+            ? userInfo.displayName
+            : "<" + userId + ">";
     }
-
+    // 获取群组成员显示名称
     getGroupMemberDisplayNameEx(userInfo) {
-        return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>'))
+        return userInfo.groupAlias
+            ? userInfo.groupAlias
+            : userInfo.friendAlias
+            ? userInfo.friendAlias
+            : userInfo.displayName
+            ? userInfo.displayName
+            : "<" + userInfo.uid + ">";
     }
 
-    getUserInfo(userId, refresh = false, groupId = '') {
+    getUserInfo(userId, refresh = false, groupId = "") {
         let userInfo = impl.getUserInfo(userId, refresh, groupId);
         if (!userInfo.portrait) {
             userInfo.portrait = Config.DEFAULT_PORTRAIT_URL;
@@ -161,20 +176,70 @@ export class WfcManager {
         impl.setFriendAlias(userId, alias, successCB, failCB);
     }
 
-    async createGroup(groupId, groupType, name, portrait, memberIds = [], lines = [0], notifyContent, successCB, failCB) {
-        impl.createGroup(groupId, groupType, name, portrait, memberIds, lines, notifyContent, successCB, failCB);
+    async createGroup(
+        groupId,
+        groupType,
+        name,
+        portrait,
+        memberIds = [],
+        lines = [0],
+        notifyContent,
+        successCB,
+        failCB
+    ) {
+        impl.createGroup(
+            groupId,
+            groupType,
+            name,
+            portrait,
+            memberIds,
+            lines,
+            notifyContent,
+            successCB,
+            failCB
+        );
     }
 
-    async setGroupManager(groupId, isSet, memberIds, lines, notifyContent, successCB, failCB) {
-        impl.setGroupManager(groupId, isSet, memberIds, lines, notifyContent, successCB, failCB);
+    async setGroupManager(
+        groupId,
+        isSet,
+        memberIds,
+        lines,
+        notifyContent,
+        successCB,
+        failCB
+    ) {
+        impl.setGroupManager(
+            groupId,
+            isSet,
+            memberIds,
+            lines,
+            notifyContent,
+            successCB,
+            failCB
+        );
     }
 
     getGroupInfo(groupId, refresh = false) {
         return impl.getGroupInfo(groupId, refresh);
     }
 
-    addGroupMembers(groupId, memberIds, notifyLines, notifyMessageContent, successCB, failCB) {
-        impl.addGroupMembers(groupId, memberIds, notifyLines, notifyMessageContent, successCB, failCB);
+    addGroupMembers(
+        groupId,
+        memberIds,
+        notifyLines,
+        notifyMessageContent,
+        successCB,
+        failCB
+    ) {
+        impl.addGroupMembers(
+            groupId,
+            memberIds,
+            notifyLines,
+            notifyMessageContent,
+            successCB,
+            failCB
+        );
     }
 
     getGroupMemberIds(groupId, fresh = false) {
@@ -189,28 +254,98 @@ export class WfcManager {
         return impl.getGroupMember(groupId, memberId);
     }
 
-    kickoffGroupMembers(groupId, memberIds, notifyLines, notifyMsg, successCB, failCB) {
-        impl.kickoffGroupMembers(groupId, memberIds, notifyLines, notifyMsg, successCB, failCB);
+    kickoffGroupMembers(
+        groupId,
+        memberIds,
+        notifyLines,
+        notifyMsg,
+        successCB,
+        failCB
+    ) {
+        impl.kickoffGroupMembers(
+            groupId,
+            memberIds,
+            notifyLines,
+            notifyMsg,
+            successCB,
+            failCB
+        );
     }
 
     async quitGroup(groupId, lines, notifyMessageContent, successCB, failCB) {
         impl.quitGroup(groupId, lines, notifyMessageContent, successCB, failCB);
     }
 
-    async dismissGroup(groupId, lines, notifyMessageContent, successCB, failCB) {
-        impl.dismissGroup(groupId, lines, notifyMessageContent, successCB, failCB);
+    async dismissGroup(
+        groupId,
+        lines,
+        notifyMessageContent,
+        successCB,
+        failCB
+    ) {
+        impl.dismissGroup(
+            groupId,
+            lines,
+            notifyMessageContent,
+            successCB,
+            failCB
+        );
     }
 
-    async modifyGroupInfo(groupId, type, newValue, lines, notifyMessageContent, successCB, failCB) {
-        impl.modifyGroupInfo(groupId, type, newValue, lines, notifyMessageContent, successCB, failCB);
+    async modifyGroupInfo(
+        groupId,
+        type,
+        newValue,
+        lines,
+        notifyMessageContent,
+        successCB,
+        failCB
+    ) {
+        impl.modifyGroupInfo(
+            groupId,
+            type,
+            newValue,
+            lines,
+            notifyMessageContent,
+            successCB,
+            failCB
+        );
     }
 
-    async modifyGroupAlias(groupId, alias, lines, notifyMessageContent, successCB, failCB) {
-        impl.modifyGroupAlias(groupId, alias, lines, notifyMessageContent, successCB, failCB);
+    async modifyGroupAlias(
+        groupId,
+        alias,
+        lines,
+        notifyMessageContent,
+        successCB,
+        failCB
+    ) {
+        impl.modifyGroupAlias(
+            groupId,
+            alias,
+            lines,
+            notifyMessageContent,
+            successCB,
+            failCB
+        );
     }
 
-    transferGroup(groupId, newOwner, lines, notifyMessageContent, successCB, failCB) {
-        impl.transferGroup(groupId, newOwner, lines, notifyMessageContent, successCB, failCB);
+    transferGroup(
+        groupId,
+        newOwner,
+        lines,
+        notifyMessageContent,
+        successCB,
+        failCB
+    ) {
+        impl.transferGroup(
+            groupId,
+            newOwner,
+            lines,
+            notifyMessageContent,
+            successCB,
+            failCB
+        );
     }
 
     getFavGroups() {
@@ -282,7 +417,15 @@ export class WfcManager {
     }
 
     createChannel(name, portrait, status, desc, extra, successCB, failCB) {
-        impl.createChannel(name, portrait, status, desc, extra, successCB, failCB);
+        impl.createChannel(
+            name,
+            portrait,
+            status,
+            desc,
+            extra,
+            successCB,
+            failCB
+        );
     }
 
     getChannelInfo(channelId, refresh) {
@@ -342,7 +485,7 @@ export class WfcManager {
         impl.setConversationSlient(conversation, silent, successCB, failCB);
     }
 
-    setConversationDraft(conversation, draft = '') {
+    setConversationDraft(conversation, draft = "") {
         impl.setConversationDraft(conversation, draft);
     }
 
@@ -382,12 +525,30 @@ export class WfcManager {
      * @param {number} count
      * @param {string} withUser
      */
-    getMessages(conversation, fromIndex, before = true, count = 20, withUser = '') {
-        return impl.getMessages(conversation, fromIndex, before, count, withUser);
+    getMessages(
+        conversation,
+        fromIndex,
+        before = true,
+        count = 20,
+        withUser = ""
+    ) {
+        return impl.getMessages(
+            conversation,
+            fromIndex,
+            before,
+            count,
+            withUser
+        );
     }
 
     loadRemoteMessages(conversation, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB);
+        impl.loadRemoteMessages(
+            conversation,
+            beforeUid,
+            count,
+            successCB,
+            failCB
+        );
     }
 
     getMessageById(messageId) {
@@ -402,8 +563,24 @@ export class WfcManager {
         return impl.searchMessage(conversation, keyword);
     }
 
-    async sendConversationMessage(conversation, messageContent, toUsers, preparedCB, progressCB, successCB, failCB) {
-        impl.sendConversationMessage(conversation, messageContent, toUsers, preparedCB, progressCB, successCB, failCB);
+    async sendConversationMessage(
+        conversation,
+        messageContent,
+        toUsers,
+        preparedCB,
+        progressCB,
+        successCB,
+        failCB
+    ) {
+        impl.sendConversationMessage(
+            conversation,
+            messageContent,
+            toUsers,
+            preparedCB,
+            progressCB,
+            successCB,
+            failCB
+        );
     }
 
     async sendMessage(message, preparedCB, progressCB, successCB, failCB) {
@@ -411,8 +588,22 @@ export class WfcManager {
     }
 
     // toUsers 用来实现定向消息
-    async sendMessageEx(message, toUsers = [], preparedCB, progressCB, successCB, failCB) {
-        impl.sendMessageEx(message, toUsers, preparedCB, progressCB, successCB, failCB);
+    async sendMessageEx(
+        message,
+        toUsers = [],
+        preparedCB,
+        progressCB,
+        successCB,
+        failCB
+    ) {
+        impl.sendMessageEx(
+            message,
+            toUsers,
+            preparedCB,
+            progressCB,
+            successCB,
+            failCB
+        );
     }
 
     // 更新了原始消息的内容
@@ -436,16 +627,42 @@ export class WfcManager {
      * @param {boolean} notify 是否触发onReceiveMessage
      * @param {Number} serverTime 服务器时间，精度到毫秒
      */
-    insertMessage(conversation, messageContent, status, notify = false, serverTime = 0) {
-        impl.insertMessage(conversation, messageContent, status, notify, serverTime);
+    insertMessage(
+        conversation,
+        messageContent,
+        status,
+        notify = false,
+        serverTime = 0
+    ) {
+        impl.insertMessage(
+            conversation,
+            messageContent,
+            status,
+            notify,
+            serverTime
+        );
     }
 
     async updateMessageContent(messageId, messageContent) {
         impl.updateMessageContent(messageId, messageContent);
     }
 
-    async uploadMedia(fileName, fileOrData, mediaType, successCB, failCB, progressCB) {
-        impl.uploadMedia(fileName, fileOrData, mediaType, successCB, failCB, progressCB);
+    async uploadMedia(
+        fileName,
+        fileOrData,
+        mediaType,
+        successCB,
+        failCB,
+        progressCB
+    ) {
+        impl.uploadMedia(
+            fileName,
+            fileOrData,
+            mediaType,
+            successCB,
+            failCB,
+            progressCB
+        );
     }
 
     connect(userId, token) {
