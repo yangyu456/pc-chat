@@ -210,8 +210,6 @@ export default class Layout extends Component {
 
         return (
             <div className={classes.overAllFrame}>
-                {/* 单独底部切换页面 */}
-                {/* <Aside location={location} ref="aside" /> */}
                 <div>
                     <Snackbar close={close} show={show} text={message} />
 

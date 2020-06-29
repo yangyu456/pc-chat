@@ -20,7 +20,7 @@ export default class Footer extends Component {
 
         return (
             <footer className={classes.footer}>
-                {/* <nav>
+                <nav>
                     <Link className="link" tabIndex="-1" to="/">
                         <span
                             className={clazz({
@@ -60,7 +60,7 @@ export default class Footer extends Component {
                             <i className="icon-ion-android-more-vertical" />
                         </span>
                     </Link>
-                </nav> */}
+                </nav>
 
                 <div className={classes.right}>
                     {React.createElement(component)}

@@ -523,11 +523,11 @@ function checkForUpdates() {
 let contextmenu;
 function updateTray(unread = 0) {
     // if (!isOsx) {
-    // Always show the tray icon on windows
+    // Always show the tray icon on windows 总是在windows上显示托盘图标
     settings.showOnTray = true;
     // }
 
-    // Update unread mesage count
+    // Update unread mesage count 更新未读页面计数
     // trayMenu[0].label = `你有 ${unread} 条信息`;
 
     if (settings.showOnTray) {
@@ -543,10 +543,10 @@ function updateTray(unread = 0) {
             icon = `${__dirname}/src/assets/images/tray.png`;
         }
 
-        // Make sure the last tray has been destroyed
+        // Make sure the last tray has been destroyed 确保最后一个托盘已被销毁
         setTimeout(() => {
             if (!tray) {
-                // Init tray icon
+                // Init tray icon 初始化Init托盘图标
                 tray = new Tray(icon);
 
                 tray.on("right-click", () => {
@@ -563,7 +563,7 @@ function updateTray(unread = 0) {
             tray.setContextMenu(contextmenu);
             tray.setToolTip("即时通讯");
             execBlink(unread > 0);
-            // Avoid tray icon been recreate
+            // Avoid tray icon been recreate 避免重新创建托盘图标
             updateTray.lastUnread = unread;
         });
     } else {
@@ -614,6 +614,24 @@ function regShortcut() {
         mainWindow.webContents.toggleDevTools();
     });
     // }
+}
+
+// 图标闪烁方法
+function flashing() {
+    let countData = 0;
+    let iconDate = [
+        `${__dirname}/src/assets/images/tray.png`,
+        `${__dirname}/src/assets/images/Remind_icon.png`,
+    ];
+    let iconFlash = setInterval(() => {
+        countData++;
+        if (countData % 2 === 0) {
+            toggleTrayIcon(iconDate[0]);
+        } else {
+            toggleTrayIcon(iconDate[1]);
+        }
+        clearInterval(iconFlash);
+    }, 500);
 }
 
 const createMainWindow = () => {
@@ -671,6 +689,8 @@ const createMainWindow = () => {
             mainWindow.hide();
         }
     });
+
+    // 任务栏闪烁
     mainWindow.on("show", () => mainWindow.flashFrame(false));
 
     ipcMain.on("voip-message", (event, args) => {
@@ -834,12 +854,24 @@ const createMainWindow = () => {
         }
     });
 
+    // 未阅读的消息
     ipcMain.on("message-unread", (event, args) => {
         var counter = args.counter;
+        if (counter > 0) {
+            mainWindow.flashFrame(true);
+        } else if (counter <= 0) {
+            mainWindow.flashFrame(false);
+        }
         //if (settings.showOnTray) {
         updateTray(counter);
         //}
     });
+
+    //  触发图标闪烁方法
+    ipcMain.on("flashingIcon", (event) => {
+        flashing();
+    });
+
     // 发送给主进程的截屏图片粘贴事件
     ipcMain.on("file-paste", (event) => {
         // 返回剪贴板中的图像内容方法
@@ -1004,14 +1036,15 @@ function disconnectAndQuit() {
     app.quit();
 }
 
+// 清除闪烁
 function clearBlink() {
     if (blink) {
         clearInterval(blink);
     }
-    mainWindow.flashFrame(false);
+    // mainWindow.flashFrame(false);
     blink = null;
 }
-
+// 执行闪烁
 function execBlink(flag, _interval) {
     let interval = _interval ? _interval : 500;
     let icons;
@@ -1032,7 +1065,7 @@ function execBlink(flag, _interval) {
         if (blink) {
             return;
         }
-        mainWindow.flashFrame(true);
+        // mainWindow.flashFrame(true);
         blink = setInterval(function () {
             toggleTrayIcon(icons[count++]);
             count = count > 1 ? 0 : 1;

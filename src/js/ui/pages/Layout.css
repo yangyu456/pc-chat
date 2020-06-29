@@ -6,7 +6,7 @@
     box-shadow: inset 0 1px 0 0 #eaedea;
     filter: blur(0);
     transition: 0.2s;
-    margin-left: 80px;
+    /* margin-left: 80px; */
 
     &.blur {
         filter: blur(6px);
@@ -15,12 +15,6 @@
 
 .overAllFrame {
     position: relative;
-
-    /* &. positionBottom {
-        position: absolute;
-        top: 0;
-        right: 0;
-    } */
 }
 
 .dragDropHolder {

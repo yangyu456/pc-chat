@@ -8,7 +8,7 @@ import Contacts from "./Contacts";
 import Settings from "./Settings";
 import Personal from "./Personal";
 
-export default class Footer extends Component {
+export default class Aside extends Component {
     render() {
         var pathname = this.props.location.pathname;
         var component = {

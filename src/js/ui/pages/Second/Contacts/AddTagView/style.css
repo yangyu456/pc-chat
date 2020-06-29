@@ -1,4 +1,3 @@
-
 .container {
     width: 100%;
 }
@@ -15,29 +14,28 @@
     width: 311px;
     box-shadow: inset 0 -1px 0 0 #eaedea;
 
-& input {
-      height: 60px;
-      width: 100%;
-      line-height: 60px;
-      background: none;
-      outline: 0;
-      border: 0;
-      font-family: 'Helvetica';
-      font-size: 24px;
-      font-weight: 100;
-      text-indent: 62px;
-  }
+    & input {
+        height: 60px;
+        width: 100%;
+        line-height: 60px;
+        background: none;
+        outline: 0;
+        border: 0;
+        font-family: "Helvetica";
+        font-size: 20px;
+        font-weight: 100;
+        text-indent: 62px;
+    }
 
-& i {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      font-size: 28px;
-      color: #d9d9d9;
-      transform: translateY(-50%);
-  }
+    & i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        font-size: 28px;
+        color: #d9d9d9;
+        transform: translateY(-50%);
+    }
 }
-
 
 .contacts {
     height: calc(100vh - 160px); /* Height - Header - Footer - Search Input */
@@ -54,9 +52,9 @@
 
     & h1 {
         margin-bottom: 25vh;
-        font-family: 'Roboto';
+        font-family: "Roboto";
         font-weight: 100;
-        color: rgba(0, 0, 0, .8);
+        color: rgba(0, 0, 0, 0.8);
         letter-spacing: 2px;
         word-spacing: 4px;
     }
@@ -81,8 +79,8 @@
 }
 
 .hiddenlist {
-    height:0;
-    overflow:hidden;
+    height: 0;
+    overflow: hidden;
 }
 
 .header {
@@ -94,7 +92,7 @@
         position: absolute;
         left: 12px;
         bottom: 8px;
-        font-family: 'Helvetica Neue';
+        font-family: "Helvetica Neue";
         font-size: 20px;
         font-weight: 300;
         color: #000;
@@ -106,18 +104,18 @@
         left: 12px;
         bottom: 8px;
         display: block;
-        font-family: 'Roboto';
+        font-family: "Roboto";
         font-size: 12px;
         color: #9b9b9b;
     }
 
     & img.icon {
         position: absolute;
-        right:20px;
-        bottom:8px;
-        display:block;
-        width:20px;
-        height:20px;
+        right: 20px;
+        bottom: 8px;
+        display: block;
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -131,7 +129,7 @@
     cursor: pointer;
 
     & p {
-        transition: .2s;
+        transition: 0.2s;
     }
 
     &:hover p {
@@ -153,19 +151,19 @@
 .tagtitle {
     font-size: 24px;
     line-height: 32px;
-    color: #409FFF;
+    color: #409fff;
     padding-left: 20px;
 }
 
 .tagListItem {
-    width:100%;
+    width: 100%;
     height: 40px;
-    border-bottom:1px solid #ddd;
+    border-bottom: 1px solid #ddd;
     cursor: pointer;
 }
 
 .tagListItem label {
-    font-size:24px;
+    font-size: 24px;
     line-height: 40px;
 }
 
@@ -178,7 +176,7 @@
 }
 
 .username {
-    font-family: 'Helvetica';
+    font-family: "Helvetica";
     font-size: 14px;
     color: #4a4a4a;
     margin: 0;
@@ -186,7 +184,7 @@
 }
 
 .signature {
-    font-family: 'Helvetica';
+    font-family: "Helvetica";
     font-size: 12px;
     color: #777;
     margin: 0;
@@ -234,8 +232,8 @@
     }
 
     .taginner {
-        width:100%;
-        line-height:32px;
+        width: 100%;
+        line-height: 32px;
     }
 
     .item {
@@ -268,12 +266,12 @@
 
 .btnGroup {
     text-align: center;
-    margin-top:20px;
+    margin-top: 20px;
 }
 
 .btnGroup button {
     display: inline-block;
-    width:80px;
+    width: 80px;
     height: 24px;
     font-size: 16px;
     line-height: 24px;
@@ -282,8 +280,8 @@
     border-radius: 3px;
 }
 
-.btnGroup button+button {
-    margin-left:10px;
+.btnGroup button + button {
+    margin-left: 10px;
 }
 
 .hiddenGroup {

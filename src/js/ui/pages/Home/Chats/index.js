@@ -40,11 +40,13 @@ let inputLock = false;
     },
     conversation: stores.chat.conversation,
     messages: stores.chat.messages,
+    // 标为已读的数据
     markedRead: stores.sessions.clearConversationUnreadStatus,
     sticky: stores.sessions.sticky,
     removeChat: stores.sessions.removeConversation,
     loading: stores.sessions.loading,
     event: stores.wfc.eventEmitter,
+    // 在这个里面找未读所有数据
     loadConversations: stores.sessions.loadConversations,
     reloadConversation: stores.sessions.reloadConversation,
 }))
@@ -55,7 +57,7 @@ export default class Chats extends Component {
         var res;
 
         if (list) {
-            // Make sure all chatset has be loaded
+            // Make sure all chatset has be loaded 确保所有的chatset已经被加载
             res = list.data.slice(-1)[0];
         }
 

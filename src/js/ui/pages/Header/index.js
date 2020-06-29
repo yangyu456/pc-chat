@@ -38,10 +38,8 @@ export default class Header extends Component {
         var isWin = window.process && window.process.platform === "win32";
         return (
             <header className={classes.container}>
-                {/* <h1>{this.getTitle()}</h1> */}
-                <h1>
-                    <aside></aside>
-                </h1>
+                <h1>{this.getTitle()}</h1>
+                {/* <h1></h1> */}
 
                 {isWin && (
                     <div>
@@ -62,6 +60,8 @@ export default class Header extends Component {
                         <p onClick={(e) => this.close()}>X</p>
                     </div>
                 )}
+
+                {/* <Aside /> */}
             </header>
         );
     }

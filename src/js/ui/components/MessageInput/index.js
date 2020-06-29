@@ -20,6 +20,12 @@ import GroupMemberType from "../../../wfc/model/groupMemberType";
 import avenginekitProxy from "../../../wfc/av/engine/avenginekitproxy";
 import CheckBox from "rc-checkbox";
 
+// @inject((stores) => ({
+//     // 标为已读的数据
+//     markedRead: stores.sessions.clearConversationUnreadStatus,
+//     // 在这个里面找未读所有数据
+//     loadConversations: stores.sessions.loadConversations,
+// }))
 export default class MessageInput extends Component {
     static propTypes = {
         me: PropTypes.object,
@@ -492,6 +498,11 @@ export default class MessageInput extends Component {
         );
     }
 
+    // 标为已读的方法
+    // returnMarkedRead() {
+    //     this.props.markedRead(this.props.loadConversations);
+    // }
+
     render() {
         var canisend = this.canisend();
         let canStartVoip =
@@ -630,7 +641,9 @@ export default class MessageInput extends Component {
                     placeholder="输入内容发送，Ctrl + Enter 换行 ..."
                     readOnly={!canisend}
                     onPaste={(e) => this.handlePaste(e)}
-                    onKeyPress={(e) => this.handleEnter(e)}
+                    onKeyPress={(e) => {
+                        this.handleEnter(e);
+                    }}
                 />
             </div>
         );

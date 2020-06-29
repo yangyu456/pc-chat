@@ -26,16 +26,20 @@ import Config from "../../../config";
 }))
 @observer
 export default class Home extends Component {
+    // 模块渲染后
     componentDidMount() {
+        // 切换到对话
         this.props.toggleConversation(true);
         if (!isElectron()) {
             wfc.eventEmitter.on(
                 EventType.ReceiveMessage,
+                // 触发新消息
                 this.onReceiveMessage
             );
         }
 
         axios.defaults.baseURL = Config.APP_SERVER;
+        // 提醒内容
         this.getRemindInfo();
         ipcRenderer.on("get-remindinfo-reply", (event, arg) => {
             console.log("渲染进程" + arg);
@@ -73,9 +77,12 @@ export default class Home extends Component {
             );
         }
     }
-
+    // 收到新消息
     onReceiveMessage = (msg) => {
         let chatTo = this.props.chatTo;
+        // 收到新消息触发图标闪烁
+        // let returnFlashing = ipcRenderer.send("flashingIcon");
+
         if (document.hidden) {
             let content = msg.messageContent;
             if (
@@ -83,10 +90,12 @@ export default class Home extends Component {
                 PersistFlag.Persist_And_Count
             ) {
                 Push.create("新消息来了", {
+                    // 返回摘要，作为二进制数据字符串值
                     body: content.digest(),
                     icon: "../../../../assets/images/icon.png",
                     timeout: 4000,
                     onClick: function () {
+                        // 点击的时候获取焦点，关闭窗口发消息
                         window.focus();
                         this.close();
                         chatTo(msg.conversation);
