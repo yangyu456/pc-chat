@@ -185,7 +185,7 @@
         "cross-env": "^5.1.1",
         "css-loader": "^1.0.0",
         "del-cli": "^3.0.0",
-        "electron": "8.2.3",
+        "electron": "8.2.4",
         "electron-builder": "^21.2.0",
         "electron-rebuild": "^1.11.0",
         "electron-updater": "^3.0.1",
