@@ -5,7 +5,7 @@ import EventType from "../../../../wfc/client/wfcEvent";
 import ConversationItem from "./conversationItem";
 import classes from "./style.css";
 import ConversationType from "../../../../wfc/model/conversationType";
-
+import TipNotificationMessageContent from "../../../../wfc/messages/notification/tipNotification";
 import scrollIntoView from "scroll-into-view-if-needed";
 import smoothScrollIntoView from "smooth-scroll-into-view-if-needed";
 import wfc from "../../../../wfc/client/wfc";
@@ -49,6 +49,7 @@ let inputLock = false;
     // 在这个里面找未读所有数据
     loadConversations: stores.sessions.loadConversations,
     reloadConversation: stores.sessions.reloadConversation,
+    removeConversation: stores.chat.removeConversation,
 }))
 @observer
 export default class Chats extends Component {
@@ -244,6 +245,7 @@ export default class Chats extends Component {
             markedRead,
             sticky,
             removeChat,
+            removeConversation,
         } = this.props;
         if (filtered.query) {
             chats = filtered.result;
@@ -258,23 +260,64 @@ export default class Chats extends Component {
         return (
             <div className={classes.container}>
                 <div className={classes.searchBar}>
-                    <i className="icon-ion-ios-search-strong" />
-                    <input
-                        id="search"
-                        // onFocus={e => this.filter(e.target.value)}
-                        onInput={(e) => this.filter(e.target.value)}
-                        // onKeyUp={e => this.navigation(e)}
-                        onCompositionStart={() => {
-                            inputLock = true;
-                        }}
-                        placeholder={filtered.query ? "" : "搜索 ..."}
-                        value={filtered.query ? filtered.query : ""}
-                        ref="search"
-                        type="text"
-                    />
+                    <div className={classes.searchFra}>
+                        <i className="icon-ion-ios-search-strong" />
+                        <input
+                            id="search"
+                            // onFocus={e => this.filter(e.target.value)}
+                            onInput={(e) => this.filter(e.target.value)}
+                            // onKeyUp={e => this.navigation(e)}
+                            onCompositionStart={() => {
+                                inputLock = true;
+                            }}
+                            placeholder={filtered.query ? "" : "搜索 ..."}
+                            value={filtered.query ? filtered.query : ""}
+                            ref="search"
+                            type="text"
+                            onChange={() => {}}
+                        />
+                    </div>
                 </div>
                 <div className={classes.chats} ref="container">
                     {chats.map((e, index) => {
+                        if (!e.lastMessage) {
+                            //dosomething
+                        } else {
+                            if (
+                                e.lastMessage.messageContent.content ===
+                                    "你[抖了抖]对方" &&
+                                e.lastMessage.from !== wfc.getUserId()
+                            ) {
+                                e.lastMessage.messageContent.content =
+                                    "对方[抖了抖]你";
+                            }
+                            // console.log("最后一条消息",e.lastMessage);
+                            if (
+                                e.lastMessage.messageContent instanceof
+                                TipNotificationMessageContent
+                            ) {
+                                let downloadTip =
+                                    e.lastMessage.messageContent.tip;
+                                if (
+                                    downloadTip.indexOf("downloadfiletip") != -1
+                                ) {
+                                    //判断为下载回执
+                                    let downloadFileName = downloadTip.replace(
+                                        "downloadfiletip",
+                                        ""
+                                    );
+                                    if (e.lastMessage.messageContent.fromSelf) {
+                                        //如果是自己发出的
+                                        e.lastMessage.messageContent.tip =
+                                            "您成功下载了文件" +
+                                            downloadFileName;
+                                    } else {
+                                        e.lastMessage.messageContent.tip =
+                                            "对方已接收文件" + downloadFileName;
+                                    }
+                                }
+                            }
+                        }
                         return (
                             <div
                                 key={
@@ -296,6 +339,7 @@ export default class Chats extends Component {
                                     currentConversation={conversation}
                                     conversationInfo={e}
                                     isSearching={!!filtered.query}
+                                    removeConversation={removeConversation}
                                 />
                             </div>
                         );

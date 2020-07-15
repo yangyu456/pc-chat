@@ -1,16 +1,22 @@
 import EventType from "../../client/wfcEvent";
-import {AppPath, BrowserWindow, ipcRenderer, isElectron, PostMessageEventEmitter} from "../../../platform";
+import {
+    AppPath,
+    BrowserWindow,
+    ipcRenderer,
+    isElectron,
+    PostMessageEventEmitter,
+} from "../../../platform";
 import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
 import MessageConfig from "../../client/messageConfig";
 import CallByeMessageContent from "../messages/callByeMessageContent";
-import DetectRTC from 'detectrtc';
+import DetectRTC from "detectrtc";
 
-const path = require('path');
+const path = require("path");
 
-// main window renderer process -> voip window renderer process
-// voip window renderer process -> main process -> main window renderer process
+// main window renderer process -> voip window renderer process 主窗口渲染进程-> voip窗口渲染进程
+// voip window renderer process -> main process -> main window renderer process voip窗口渲染进程->主进程->主窗口渲染进程
 export class AvEngineKitProxy {
     queueEvents;
     callWin;
@@ -22,25 +28,40 @@ export class AvEngineKitProxy {
 
     setup(wfc) {
         DetectRTC.load(() => {
-            this.isSupportVoip = (DetectRTC.isWebRTCSupported && DetectRTC.hasWebcam && DetectRTC.hasSpeakers && DetectRTC.hasMicrophone);
-            console.log('detectRTC', this.isSupportVoip, DetectRTC.isWebRTCSupported, DetectRTC.hasWebcam, DetectRTC.hasSpeakers, DetectRTC.hasMicrophone);
+            this.isSupportVoip =
+                DetectRTC.isWebRTCSupported &&
+                DetectRTC.hasWebcam &&
+                DetectRTC.hasSpeakers &&
+                DetectRTC.hasMicrophone;
+            console.log(
+                "detectRTC",
+                this.isSupportVoip,
+                DetectRTC.isWebRTCSupported,
+                DetectRTC.hasWebcam,
+                DetectRTC.hasSpeakers,
+                DetectRTC.hasMicrophone
+            );
         });
         this.event = wfc.eventEmitter;
         this.event.on(EventType.ReceiveMessage, this.onReceiveMessage);
 
         if (isElectron()) {
-            ipcRenderer.on('voip-message', this.sendVoipListener);
+            ipcRenderer.on("voip-message", this.sendVoipListener);
         }
     }
 
     sendVoipListener = (event, msg) => {
-
-        let contentClazz = MessageConfig.getMessageContentClazz(msg.content.type);
+        let contentClazz = MessageConfig.getMessageContentClazz(
+            msg.content.type
+        );
 
         let content = new contentClazz();
         content.decode(msg.content);
-        console.log('to send voip message', content);
-        if (content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT) {
+        console.log("to send voip message", content);
+        if (
+            content.type ===
+            MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
+        ) {
             this.participants.push(content.participants);
         } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
             this.conversation = null;
@@ -51,47 +72,69 @@ export class AvEngineKitProxy {
                 return;
             }
         }
-        wfc.sendConversationMessage(msg.conversation, content, msg.toUsers, (messageId, timestamp) => {
-
-        }, (uploaded, total) => {
-
-        }, (messageUid, timestamp) => {
-            this.emitToVoip('sendMessageResult', {error: 0, sendMessageId: msg.sendMessageId, timestamp: timestamp})
-        }, (errorCode) => {
-            this.emitToVoip('sendMessageResult', {error: errorCode, sendMessageId: msg.sendMessageId})
-        });
-    }
-
+        wfc.sendConversationMessage(
+            msg.conversation,
+            content,
+            msg.toUsers,
+            (messageId, timestamp) => {},
+            (uploaded, total) => {},
+            (messageUid, timestamp) => {
+                this.emitToVoip("sendMessageResult", {
+                    error: 0,
+                    sendMessageId: msg.sendMessageId,
+                    timestamp: timestamp,
+                });
+            },
+            (errorCode) => {
+                this.emitToVoip("sendMessageResult", {
+                    error: errorCode,
+                    sendMessageId: msg.sendMessageId,
+                });
+            }
+        );
+    };
 
     onReceiveMessage = (msg) => {
         if (!this.isSupportVoip) {
-            console.log('not support voip, just ignore voip message')
+            console.log("not support voip, just ignore voip message");
             return;
         }
-        let now = (new Date()).valueOf();
+        let now = new Date().valueOf();
         let delta = wfc.getServerDeltaTime();
-        if ((msg.conversation.type === ConversationType.Single || msg.conversation.type === ConversationType.Group) && now - (msg.timestamp - delta) < 90 * 1000) {
+        if (
+            (msg.conversation.type === ConversationType.Single ||
+                msg.conversation.type === ConversationType.Group) &&
+            now - (msg.timestamp - delta) < 90 * 1000
+        ) {
             let content = msg.messageContent;
-            if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_END
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_SIGNAL
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_MODIFY
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT_T
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
-                || content.type === MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO
+            if (
+                content.type === MessageContentType.VOIP_CONTENT_TYPE_START ||
+                content.type === MessageContentType.VOIP_CONTENT_TYPE_END ||
+                content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT ||
+                content.type === MessageContentType.VOIP_CONTENT_TYPE_SIGNAL ||
+                content.type === MessageContentType.VOIP_CONTENT_TYPE_MODIFY ||
+                content.type ===
+                    MessageContentType.VOIP_CONTENT_TYPE_ACCEPT_T ||
+                content.type ===
+                    MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT ||
+                content.type === MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO
             ) {
                 console.log("receive voip message", msg);
-                if (msg.direction === 0
-                    && content.type !== MessageContentType.VOIP_CONTENT_TYPE_END
-                    && content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
-                    && content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT) {
+                if (
+                    msg.direction === 0 &&
+                    content.type !== MessageContentType.VOIP_CONTENT_TYPE_END &&
+                    content.type !==
+                        MessageContentType.VOIP_CONTENT_TYPE_ACCEPT &&
+                    content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
+                ) {
                     return;
                 }
 
                 let participantUserInfos = [];
                 let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
-                if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START) {
+                if (
+                    content.type === MessageContentType.VOIP_CONTENT_TYPE_START
+                ) {
                     this.conversation = msg.conversation;
                     this.callId = content.callId;
                     this.participants.push(...content.targetIds);
@@ -100,17 +143,25 @@ export class AvEngineKitProxy {
                     if (msg.conversation.type === ConversationType.Single) {
                         participantUserInfos = [wfc.getUserInfo(msg.from)];
                     } else {
-                        let targetIds = content.targetIds.filter(id => id !== selfUserInfo.uid);
+                        let targetIds = content.targetIds.filter(
+                            (id) => id !== selfUserInfo.uid
+                        );
                         targetIds.push(msg.from);
-                        participantUserInfos = wfc.getUserInfos(targetIds, msg.conversation.target);
+                        participantUserInfos = wfc.getUserInfos(
+                            targetIds,
+                            msg.conversation.target
+                        );
                     }
                     if (!this.callWin) {
                         this.showCallUI(msg.conversation);
                     }
-                } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT) {
+                } else if (
+                    content.type ===
+                    MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
+                ) {
                     let participantIds = [...content.participants];
                     if (content.existParticipants) {
-                        content.existParticipants.forEach(p => {
+                        content.existParticipants.forEach((p) => {
                             participantIds.push(p.userId);
                         });
                     }
@@ -119,24 +170,42 @@ export class AvEngineKitProxy {
                     this.callId = content.callId;
                     this.participants.push(...participantIds);
 
-                    participantIds = participantIds.filter(u => u.uid !== selfUserInfo.uid);
-                    participantUserInfos = wfc.getUserInfos(participantIds, msg.conversation.target);
+                    participantIds = participantIds.filter(
+                        (u) => u.uid !== selfUserInfo.uid
+                    );
+                    participantUserInfos = wfc.getUserInfos(
+                        participantIds,
+                        msg.conversation.target
+                    );
 
-                    if (!this.callWin && content.participants.indexOf(selfUserInfo.uid) > -1) {
+                    if (
+                        !this.callWin &&
+                        content.participants.indexOf(selfUserInfo.uid) > -1
+                    ) {
                         this.showCallUI(msg.conversation);
                     }
-                } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
+                } else if (
+                    content.type === MessageContentType.VOIP_CONTENT_TYPE_END
+                ) {
                     this.conversation = null;
                     this.callId = null;
                     this.participants = [];
                 }
 
-                if (msg.conversation.type === ConversationType.Group
-                    && (content.type === MessageContentType.VOIP_CONTENT_TYPE_START
-                        || content === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
-                    )) {
-                    let memberIds = wfc.getGroupMemberIds(msg.conversation.target);
-                    msg.groupMemberUserInfos = wfc.getUserInfos(memberIds, msg.conversation.target);
+                if (
+                    msg.conversation.type === ConversationType.Group &&
+                    (content.type ===
+                        MessageContentType.VOIP_CONTENT_TYPE_START ||
+                        content ===
+                            MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT)
+                ) {
+                    let memberIds = wfc.getGroupMemberIds(
+                        msg.conversation.target
+                    );
+                    msg.groupMemberUserInfos = wfc.getUserInfos(
+                        memberIds,
+                        msg.conversation.target
+                    );
                 }
 
                 msg.participantUserInfos = participantUserInfos;
@@ -152,13 +221,13 @@ export class AvEngineKitProxy {
             if (this.callWin) {
                 this.callWin.webContents.send(event, args);
             } else if (this.queueEvents) {
-                this.queueEvents.push({event, args});
+                this.queueEvents.push({ event, args });
             }
         } else {
             if (this.events) {
                 this.events.emit(event, args);
             } else if (this.queueEvents) {
-                this.queueEvents.push({event, args});
+                this.queueEvents.push({ event, args });
             }
         }
     }
@@ -173,7 +242,7 @@ export class AvEngineKitProxy {
     }
 
     emitToMain(event, args) {
-        console.log('emit to main', event, args);
+        console.log("emit to main", event, args);
         if (isElectron()) {
             // renderer to main
             ipcRenderer.send(event, args);
@@ -188,7 +257,10 @@ export class AvEngineKitProxy {
             ipcRenderer.on(event, listener);
         } else {
             if (!this.events) {
-                this.events = new PostMessageEventEmitter(window.opener, window.location.origin);
+                this.events = new PostMessageEventEmitter(
+                    window.opener,
+                    window.location.origin
+                );
             }
             this.events.on(event, listener);
         }
@@ -197,7 +269,7 @@ export class AvEngineKitProxy {
     startCall(conversation, audioOnly, participants) {
         let callId = conversation.target + Math.random();
         this.conversation = conversation;
-        this.participants.push(...participants)
+        this.participants.push(...participants);
         this.callId = callId;
 
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
@@ -205,53 +277,67 @@ export class AvEngineKitProxy {
         let groupMemberUserInfos;
         if (conversation.type === ConversationType.Group) {
             let memberIds = wfc.getGroupMemberIds(conversation.target);
-            groupMemberUserInfos = wfc.getUserInfos(memberIds, conversation.target);
+            groupMemberUserInfos = wfc.getUserInfos(
+                memberIds,
+                conversation.target
+            );
         }
         this.showCallUI(conversation);
-        this.emitToVoip('startCall', {
+        this.emitToVoip("startCall", {
             conversation: conversation,
             audioOnly: audioOnly,
             callId: callId,
             selfUserInfo: selfUserInfo,
             groupMemberUserInfos: groupMemberUserInfos,
-            participantUserInfos: participantUserInfos
+            participantUserInfos: participantUserInfos,
         });
     }
 
     showCallUI(conversation) {
         this.queueEvents = [];
-        let type = conversation.type === ConversationType.Single ? 'voip-single' : 'voip-multi';
+        let type =
+            conversation.type === ConversationType.Single
+                ? "voip-single"
+                : "voip-multi";
         if (isElectron()) {
-            let win = new BrowserWindow(
-                {
-                    width: 360,
-                    height: 640 + 15,
-                    resizable: true,
-                    maximizable: true,
-                    webPreferences: {
-                        scrollBounce: true,
-                        nativeWindowOpen: true,
-                    },
-                }
-            );
+            let win = new BrowserWindow({
+                width: 360,
+                height: 640 + 15,
+                resizable: true,
+                maximizable: true,
+                webPreferences: {
+                    scrollBounce: true,
+                    nativeWindowOpen: true,
+                },
+            });
 
-            win.webContents.on('did-finish-load', () => {
+            win.webContents.on("did-finish-load", () => {
                 this.onVoipWindowReady(win);
             });
             // win.webContents.openDevTools();
-            win.on('close', () => {
+            win.on("close", () => {
                 this.onVoipWindowClose();
             });
 
-            win.loadURL(path.join('file://', AppPath, 'src/index.html?' + type));
+            win.loadURL(
+                path.join("file://", AppPath, "src/index.html?" + type)
+            );
             win.show();
         } else {
-            let win = window.open(window.location.origin + '?' + type, 'target', 'width=360,height=640,left=200,top=200,toolbar=no,menubar=no,resizable=no,location=no, maximizable');
-            win.addEventListener('load', () => {
-                this.onVoipWindowReady(win);
-            }, true);
+            let win = window.open(
+                window.location.origin + "?" + type,
+                "target",
+                "width=360,height=640,left=200,top=200,toolbar=no,menubar=no,resizable=no,location=no, maximizable"
+            );
+            win.addEventListener(
+                "load",
+                () => {
+                    this.onVoipWindowReady(win);
+                },
+                true
+            );
 
-            win.addEventListener('beforeunload', () => {
+            win.addEventListener("beforeunload", () => {
                 this.onVoipWindowClose();
             });
         }
@@ -261,33 +347,40 @@ export class AvEngineKitProxy {
         if (this.conversation) {
             let byeMessage = new CallByeMessageContent();
             byeMessage.callId = this.callId;
-            wfc.sendConversationMessage(this.conversation, byeMessage, this.participants);
+            wfc.sendConversationMessage(
+                this.conversation,
+                byeMessage,
+                this.participants
+            );
             this.conversation = null;
             this.callId = null;
             this.participants = [];
         }
         this.callWin = null;
-        this.voipEventRemoveAllListeners(['message']);
+        this.voipEventRemoveAllListeners(["message"]);
     }
 
     onVoipWindowReady(win) {
         this.callWin = win;
         if (!isElectron()) {
-            this.events = new PostMessageEventEmitter(win, window.location.origin)
-            this.events.on('voip-message', this.sendVoipListener)
+            this.events = new PostMessageEventEmitter(
+                win,
+                window.location.origin
+            );
+            this.events.on("voip-message", this.sendVoipListener);
         }
         if (this.queueEvents.length > 0) {
             this.queueEvents.forEach((eventArgs) => {
-                console.log('process queued event');
+                console.log("process queued event");
                 this.emitToVoip(eventArgs.event, eventArgs.args);
-            })
+            });
         }
     }
 
     voipEventRemoveAllListeners(events = []) {
         if (isElectron()) {
             // renderer
-            events.forEach(e => ipcRenderer.removeAllListeners(e));
+            events.forEach((e) => ipcRenderer.removeAllListeners(e));
         } else {
             this.events.stop();
             this.events = null;

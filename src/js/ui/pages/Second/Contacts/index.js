@@ -72,6 +72,15 @@ export default class Contacts extends Component {
                         className={e.expand ? classes.list : classes.hiddenlist}
                     >
                         {e.list.map((e, index) => {
+                            var onlineState = e.onlineState;
+                            var onlineStateText = '';
+                            switch (onlineState){
+                                case "1":onlineStateText = '在线';break;
+                                case "2":onlineStateText = '离开';break;
+                                case "3":onlineStateText = '正忙';break;
+                                case "4":onlineStateText = '离线';break;
+                                default: onlineStateText = '离线';break;
+                            }
                             return (
                                 <div
                                     className={classes.item}
@@ -83,7 +92,7 @@ export default class Contacts extends Component {
                                         this.props.showUserinfo(true, e);
                                     }}
                                 >
-                                    <div className={classes.avatar}>
+                                    <div className={classes.avatar} title={onlineStateText}>
                                         <img
                                             src={this.itemPortrait(e)}
                                             style={{
@@ -91,6 +100,12 @@ export default class Contacts extends Component {
                                                 width: 32,
                                             }}
                                         />
+                                        <span className={clazz(classes.onlinestate,{
+                                            [classes.online]:onlineState == "1",
+                                            [classes.leave]:onlineState == "2",
+                                            [classes.busy]:onlineState == "3",
+                                            [classes.offline]:(onlineState == "4" || onlineState == null)
+                                        })}></span>
                                     </div>
                                     <div className={classes.info}>
                                         <p
@@ -172,38 +187,50 @@ export default class Contacts extends Component {
     renderTagList(list) {
         //渲染标签列表
         return list.map((e, index) => {
+            var len = e.users.length;
             return (
-                <div className={classes.group}>
-                    <label onClick={() => this.showTagView(e)}>
-                        {e.groupName}
+                <div className={clazz(classes.group,classes.group2)}>
+                    <label onClick={() => this.showTagView(e)} 
+                        style={{
+                            lineHeight: '30px',
+                            paddingLeft: '10px',}}>
+                        {e.groupName}({e.users.length})
                     </label>
-                    {e.users.map((e) => {
-                        return (
-                            <div
-                                className={classes.item}
-                                key={index}
-                                onClick={() => {
-                                    //if (query) {
-                                    //    this.filter('')
-                                    //}
+                    <div className={classes.item2}>
+                        {e.users.map((e,i) => {
+                            return (
+                                <span style={{color: "#323232",fontSize: "17px"}} 
+                                    onClick={() => {
                                     this.props.showUserinfo(true, e);
-                                }}
-                            >
-                                <div className={classes.avatar}>
-                                    <img
-                                        src={this.itemPortrait(e)}
-                                        style={{
-                                            height: 32,
-                                            width: 32,
-                                        }}
-                                    />
-                                </div>
-                                <div className={classes.info}>
-                                    <p className={classes.username}>{e.name}</p>
-                                </div>
-                            </div>
-                        );
-                    })}
+                                }}>
+                                {e.name}{(i+1)==len?(null):(<span>、</span>)}
+                                </span>
+                                // <div
+                                //     className={classes.item}
+                                //     key={index}
+                                //     onClick={() => {
+                                //         //if (query) {
+                                //         //    this.filter('')
+                                //         //}
+                                //         this.props.showUserinfo(true, e);
+                                //     }}
+                                // >
+                                //     <div className={classes.avatar}>
+                                //         <img
+                                //             src={this.itemPortrait(e)}
+                                //             style={{
+                                //                 height: 32,
+                                //                 width: 32,
+                                //             }}
+                                //         />
+                                //     </div>
+                                //     <div className={classes.info}>
+                                //         <p className={classes.username}>{e.name}</p>
+                                //     </div>
+                                // </div>
+                            );
+                        })}
+                    </div>
                 </div>
             );
         });
@@ -297,6 +324,7 @@ export default class Contacts extends Component {
                         value={query ? query : ""}
                         ref="search"
                         type="text"
+                        onChange={() => {}}
                     />
                 </div>
                 <div className={classes.contacts} ref="container">
@@ -309,8 +337,8 @@ export default class Contacts extends Component {
           this.props.addTagViewShow == false &&
           this.props.broadCastShow == false ? (
             <div className={classes.container}>
-                <div className={classes.searchBar}>
-                    <p
+                <div className={classes.searchBar2}>
+                    {/* <p
                         style={{
                             lineHeight: "40px",
                             textIndent: "74px",
@@ -319,10 +347,41 @@ export default class Contacts extends Component {
                         }}
                     >
                         我的自定义分组
-                    </p>
+                    </p> */}
+                    <div
+                        className={classes.addTag}
+                        onClick={() => this.props.showAddTagView()}
+                        style={{
+                            width: "200px",
+                            fontSize: "16px",
+                            color: "#23499e",
+                            lineHeight: "60px",
+                            paddingLeft: "20px"
+                        }}
+                    >
+                        <i
+                            className="icon-ion-ios-plus-outline"
+                            title="新建分组"
+                            style={{
+                                color: "#23499e",
+                                fontSize: "19px",
+                                fontWeight: "bold"
+                            }}
+                        />
+                        新增自定义分组
+                    </div>
+                    <button
+                        className={classes.backBtn2}
+                        type="button"
+                        onClick={() => {
+                            this.hideTagInfo();
+                        }}
+                    >
+                        返回
+                    </button>
                 </div>
                 <div className={classes.contacts}>
-                    <div
+                    {/* <div
                         className={classes.addTag}
                         onClick={() => this.props.showAddTagView()}
                         style={{
@@ -343,7 +402,7 @@ export default class Contacts extends Component {
                         }}
                     >
                         返回上一级
-                    </button>
+                    </button> */}
                     <div className={classes.tagList}>
                         {this.renderTagList(tagList)}
                     </div>

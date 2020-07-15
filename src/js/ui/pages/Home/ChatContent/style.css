@@ -6,9 +6,9 @@
     & header {
         position: relative;
         display: flex;
-        width: 100%;
+        width: 99%;
         height: 60px;
-        padding-left: 32px;
+        padding-left: 36px;
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #e2e2e2;
@@ -66,10 +66,11 @@
     display: flex;
     height: 100%;
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-direction: column;
     background-color: #f5f5f5;
+    padding-top: 20%;
 
     & img {
         width: 200px;
@@ -88,7 +89,7 @@
 .messages {
     width: 100%;
     height: calc(
-        100vh - 280px - 16px
+        100vh - 244px
     ); /* Height - Header - Footer - Subtitle - Padding top */
     padding-top: 16px;
     overflow-x: hidden;
@@ -99,15 +100,17 @@
     }
 }
 
+/* 对话内边距 */
 .message {
     max-width: calc(100% - 34px - 48px);
-    padding: 0 34px;
+    padding: 0 51px 0 42px;
     margin-bottom: 4px;
 
     & > div {
         position: relative;
         display: inline-block;
-        padding: 5px 0 0 5px;
+        padding: 5px 32px 0 15px;
+        margin-bottom: 12px;
     }
 
     & .avatar {
@@ -128,8 +131,8 @@
 
     & img + p.username {
         position: absolute;
-        top: 0;
-        left: 0;
+        top: -3px;
+        left: -7px;
         height: 32px;
         line-height: 32px;
         padding: 0 12px;
@@ -148,8 +151,8 @@
 
     & .avatar {
         position: absolute;
-        top: -6px;
-        left: -16px;
+        top: 3px;
+        left: -17px;
     }
 }
 
@@ -169,6 +172,7 @@
     }
 }
 
+/* 全部对话框 */
 .message.isText {
     & .content {
         white-space: pre-wrap;
@@ -176,6 +180,21 @@
         max-width: 100%;
         background: #fff;
         box-shadow: 0 6px 28px 0 rgba(230, 230, 230, 100);
+        border-radius: 5px;
+        position: relative;
+        left: 12px;
+    }
+
+    & .content::before {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 0;
+        height: 0;
+        border: 10px solid transparent;
+        border-right-color: #fff;
+        left: -15px;
+        top: 6px;
     }
 
     & p {
@@ -187,7 +206,11 @@
         color: #777;
         line-height: 22.65px;
         user-select: text;
-        word-break: normal;
+        word-break: break-all;
+    }
+
+    & p * {
+        user-select: text;
     }
 
     & .times {
@@ -541,6 +564,7 @@
     }
 }
 
+/* 右侧头像 */
 .message.isme.isText {
     & > div {
         display: flex;
@@ -549,11 +573,38 @@
 
     & .avatar {
         left: auto;
-        right: -16px;
+        right: -25px;
     }
 
+    & > div::before {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 0;
+        height: 0;
+        border: 10px solid transparent;
+        border-left-color: #d9e0f1;
+        right: 4px;
+        top: 11px;
+    }
+
+    /* 右侧对话框 */
     & .content {
         background: #d9e0f1;
+        right: -20px;
+    }
+
+    /* 抵消右侧颜色 */
+    & .content::before {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 0;
+        height: 0;
+        border: 10px solid transparent;
+        border-left-color: transparent;
+        left: 77px;
+        top: 7px;
     }
 
     & p {
@@ -568,6 +619,7 @@
     & p,
     & .times {
         color: #020400 !important;
+        word-break: break-all;
     }
 }
 
@@ -603,6 +655,10 @@
         left: auto;
         right: -16px;
     }
+    /* 
+    & .isShake {
+        
+    } */
 
     & .content {
         text-align: right;
@@ -740,17 +796,22 @@
         & :global(.qqemoji) {
             transform: translateY(-1px);
         }
+
+        & .avatar {
+            top: 15px;
+            left: -17px;
+        }
     }
 
     .message {
         max-width: calc(100% - 24px - 36px);
-        padding: 0 24px;
+        padding: 0 24px 0 32px;
         margin-bottom: 4px;
 
         & > div {
             position: relative;
             display: inline-block;
-            padding: 12px 0 0 12px;
+            padding: 12px 34px 0px 11px;
         }
 
         & .avatar {
@@ -772,12 +833,16 @@
     }
 
     .message.isText {
+        & .content::before {
+            left: -15px;
+            top: 5px;
+        }
         & p {
             white-space: pre-wrap;
             min-width: 37px;
             padding: 8.32px 11.3px 6px 26px;
             font-size: 13px;
-            word-break: normal;
+            word-break: break-all;
             line-height: 16px;
         }
 
@@ -968,13 +1033,17 @@
     }
 
     .message.isme.isText {
+        & > div::before {
+            right: 7px;
+            top: 17px;
+        }
         & .avatar {
             right: -12px;
         }
 
         & p {
             padding: 8.32px 30px 6px 11.3px;
-            word-break: normal;
+            word-break: break-all;
         }
 
         & .times {
@@ -1039,4 +1108,11 @@
         opacity: 1;
         bottom: 12px;
     }
+}
+.editTitleBtn {
+    position: absolute;
+    left: 60px;
+    top: 20px;
+    display: inline-block;
+    margin-left: 16px;
 }

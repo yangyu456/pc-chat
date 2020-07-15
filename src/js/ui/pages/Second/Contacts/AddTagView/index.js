@@ -161,25 +161,35 @@ export default class TagView extends Component {
         return (
             <div className={classes.container}>
                 <div className={classes.searchBar}>
-                    <i className="icon-ion-ios-search-strong" />
-                    <input
-                        id="add-tag"
-                        onChange={e => this.inputAddGroupName(e.target.value)}
-                        placeholder='新建分组名...'
-                        value={addGroupNameValue ? addGroupNameValue : ''}
-                        disabled={addGroupNameFlag==true}
-                        type="text" />
+                    {/* <i className="icon-ion-ios-search-strong" /> */}
                     <div className={addGroupNameFlag==true ? classes.hiddenGroup : classes.btnGroup}>
-                        <button type="button" onClick={() => this.props.saveAddGroupName()}>确定</button>
-                        <button type="button" onClick={() => this.props.exitAddGroup()}>返回上级</button>
+                        <button type="button" onClick={() => this.props.exitAddGroup()}>取消</button>
+                        {/* <input
+                            id="add-tag"
+                            onChange={e => this.inputAddGroupName(e.target.value)}
+                            placeholder='新建分组名...'
+                            value={addGroupNameValue ? addGroupNameValue : ''}
+                            disabled={addGroupNameFlag==true}
+                            type="text" /> */}
+                        <p style={{fontSize:'16px',color:'#323232'}}>新建分组</p>
+                        <button type="button" onClick={() => this.props.saveAddGroupName()}>完成</button>
                     </div>
                 </div>
                 <div className={classes.addtagview}>
+                <div style={{color:'#a8a9a9',margin:'15px 0',paddingLeft:'10px'}}>分组名</div>
+                <input
+                    id="add-tag"
+                    className={classes.input}
+                    onChange={e => this.inputAddGroupName(e.target.value)}
+                    placeholder='新建分组名...'
+                    value={addGroupNameValue ? addGroupNameValue : ''}
+                    disabled={addGroupNameFlag==true}
+                    type="text" />
                 {addGroupNameFlag == true ? (<div
                     ref="container">
-                    <div className={classes.btnGroup}>
-                        <button type="button" onClick={() => this.props.saveAddGroup()}>保存分组</button>
-                        <button type="button" onClick={() => this.props.exitAddGroup()}>返回上级</button>
+                    <div className={classes.btnGroup} style={{marginTop:'20px'}}>
+                        <button type="button" onClick={() => this.props.saveAddGroup()}>保存</button>
+                        <button type="button" onClick={() => this.props.exitAddGroup()}>返回</button>
                     </div>
                     {this.renderColumns(result, 0, query)}
                 </div>) : (<div></div>)}

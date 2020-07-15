@@ -4,10 +4,12 @@ import PropTypes from "prop-types";
 import Checkbox from "rc-checkbox";
 import { ipcRenderer, isElectron } from "../../../platform";
 import clazz from "classname";
-
 import classes from "./style.css";
 import Emoji from "./Emoji";
+import QuickSend from "./QuickSend";
+import QuickSendList from "./QuickSendList";
 import Tribute from "tributejs";
+import ChatHistory from "./ChatHistory";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import PTextMessageContent from "../../../wfc/messages/ptextMessageContent";
 import ConversationType from "../../../wfc/model/conversationType";
@@ -18,14 +20,26 @@ import GroupInfo from "../../../wfc/model/groupInfo";
 import GroupType from "../../../wfc/model/groupType";
 import GroupMemberType from "../../../wfc/model/groupMemberType";
 import avenginekitProxy from "../../../wfc/av/engine/avenginekitproxy";
+import TipNotification from "../../../wfc/messages/notification/tipNotification";
 import CheckBox from "rc-checkbox";
-
-// @inject((stores) => ({
-//     // 标为已读的数据
-//     markedRead: stores.sessions.clearConversationUnreadStatus,
-//     // 在这个里面找未读所有数据
-//     loadConversations: stores.sessions.loadConversations,
-// }))
+// 表情
+import Config from "../../../config";
+import { parser as emojiParse } from "utils/emoji";
+import { inject, observer } from "mobx-react";
+import "!style-loader!css-loader!./font/iconfont.css";
+// import Hist from "./Hist/hist";
+@inject((stores) => ({
+    getList: () => {
+        var { chat } = stores;
+        return chat.quickSendList;
+    },
+    historyList: () => {
+        var { chat } = stores;
+        return chat.historyList;
+    },
+    toggleShake: stores.chat.toggleShake,
+}))
+@observer
 export default class MessageInput extends Component {
     static propTypes = {
         me: PropTypes.object,
@@ -37,6 +51,17 @@ export default class MessageInput extends Component {
         process: PropTypes.func.isRequired,
         conversation: PropTypes.object,
         target: PropTypes.any,
+        // 更新自定义快捷发送
+        updateQuickSend: PropTypes.func,
+        initQuickSend: PropTypes.func,
+        quickSendList: PropTypes.array,
+        getHistoryList: PropTypes.func,
+        searchHistory: PropTypes.func,
+        searchingText: PropTypes.string,
+        // 历史消息
+        // HistDate: PropTypes.object,
+        // 方法
+        // HistData: PropTypes.func
     };
 
     static defaultProps = {
@@ -166,9 +191,29 @@ export default class MessageInput extends Component {
 
         return false;
     }
+    placeCaretAtEnd(el) {
+        el.focus();
+        if (typeof window.getSelection != "undefined"
+            && typeof document.createRange != "undefined") {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        else if (typeof document.body.createTextRange != "undefined") {
+            var textRange = document.body.createTextRange();
+            textRange.moveToElementText(el);
+            textRange.collapse(false);
+            textRange.select();
+        }
+    }
     // 当键盘按下的时候触发
     async handleEnter(e) {
-        var message = this.refs.input.value.trim();
+        // var message = this.refs.input.value.trim();
+        var message = this.refs.input.innerHTML.trim().replace(/&nbsp;/g," ").trim();
+        // console.log(message);
         var conversation = this.props.conversation;
 
         if (!conversation || !this.canisend() || !message || e.charCode !== 13)
@@ -176,10 +221,11 @@ export default class MessageInput extends Component {
 
         if (e.ctrlKey && e.charCode === 13) {
             e.preventDefault();
-            this.refs.input.value = this.refs.input.value + "\n";
+            // this.refs.input.value = this.refs.input.value + "\n";
+            this.refs.input.innerHTML = this.refs.input.innerHTML + "<div><br></div>";
+            this.placeCaretAtEnd(this.refs.input);
             return;
         }
-
         // TODO batch
         var batch = conversation.length > 1;
 
@@ -187,24 +233,146 @@ export default class MessageInput extends Component {
         // await this.props.sendMessage(
         //     new TextMessageContent(message)
         // )
+
+        // TODO 处理表情路径变化
+        message = message
+            .replace(/<img class="emoji" draggable="false" alt="/g, "")
+            .replace(/" src="assets\/twemoji\/72x72\/[0-9a-z-]+\.png">/g, '')
+            .replace(
+                /" src="https:\/\/twemoji\.maxcdn\.com\/v\/12\.1\.6\/72x72\/[0-9a-z-]+\.png">/g,
+                ""
+            )
+        console.log(message);
         let textMessageContent = this.handleMention(message);
         this.props.sendMessage(textMessageContent);
-        this.refs.input.value = "";
+        this.refs.input.innerHTML = "";
         wfc.setConversationDraft(conversation, "");
         e.preventDefault();
     }
 
     state = {
+        // 是否显示表情
         showEmoji: false,
+        // 是否显示快捷发送
+        showQuickSend: false,
+        //是否显示历史记录
+        showHistory: false,
+        // showHist:false
+        showChatHistory: false,
+        // 是否显示快捷发送
+        showQuickSendList: false,
     };
 
+    changeQuick(command) {
+        this.props.quickSendList.forEach((e, i) => {
+            if (command == e.command) {
+                this.setState({
+                    currentQuickSend: { command: command, message: e.message },
+                });
+            }
+        });
+    }
+
     toggleEmoji(show = !this.state.showEmoji) {
-        this.setState({ showEmoji: show });
+        this.setState({
+            showEmoji: show,
+            showChatHistory: false,
+            showQuickSend: false,
+            showQuickSendList: false,
+        });
+    }
+
+    // 窗口抖屏
+    toggShake(e) {
+        var conversation = this.props.conversation;
+        // 本地缓存一个true
+        localStorage.setItem("isWin", true);
+        // 为 1 发消息的对话框是群聊
+        let groupShake = conversation.type === 1 ? true : false;
+        this.props.toggleShake(groupShake);
+        // 群组不可以抖屏
+        if (groupShake === false) {
+            var message = "你[抖了抖]对方";
+            if (!conversation || !this.canisend() || !message) return;
+            var batch = conversation.length > 1;
+            let textMessageContent = this.handleMention(message);
+            this.props.sendMessage(textMessageContent);
+            this.refs.input.value = "";
+            wfc.setConversationDraft(conversation, "");
+            e.preventDefault();
+        }
     }
 
     toggleChatHistory(show = !this.state.showChatHistory) {
         //切换历史聊天记录显示隐藏
-        this.setState({ showChatHistory: show });
+        this.setState({
+            showChatHistory: show,
+            showEmoji: false,
+            showQuickSend: false,
+            showQuickSendList: false,
+        });
+    }
+    //切换快捷回复的显示隐藏
+    toggleQuickSend(show = !this.state.showQuickSend) {
+        if (show) {
+            this.setState({
+                showQuickSend: show,
+                showChatHistory: false,
+                showEmoji: false,
+                showQuickSendList: false,
+            });
+        } else {
+            this.setState({
+                showQuickSend: show,
+                showChatHistory: false,
+                showEmoji: false,
+                showQuickSendList: true,
+            });
+        }
+    }
+    closeAllQuickSend() {
+        //关闭所有快捷发送面板
+        this.setState({
+            showQuickSend: false,
+            showQuickSendList: false,
+        });
+    }
+    //切换快捷回复列表显示隐藏
+    toggleQuickSendList(show = !this.state.showQuickSendList) {
+        this.setState({
+            showQuickSendList: show,
+            showChatHistory: false,
+            showEmoji: false,
+            showQuickSend: false,
+        });
+    }
+    downloadedTipNotify() {
+        // 发送下载完成的回执
+        var conversation = this.props.conversation;
+        if (!conversation || !this.canisend()){
+            return null;
+        }
+        let downloadedMessageContent = new TipNotification("downloadfiletip");
+        this.props.sendMessage(downloadedMessageContent);
+        this.refs.input.value = "";
+        wfc.setConversationDraft(conversation, "");
+        e.preventDefault();
+    }
+    outputQuickSend(msg) {
+        console.log("快捷发送" + msg);
+        // 点击快捷回复直接发送
+        var message = msg;
+        var conversation = this.props.conversation;
+        if (!conversation || !this.canisend() || !message) return;
+
+        let textMessageContent = this.handleMention(message);
+        this.props.sendMessage(textMessageContent);
+        wfc.setConversationDraft(conversation, "");
+    }
+    // 更新快捷回复command快捷键指令message快捷回复内容
+    updateQuickSend(command, message) {
+        // console.log(command,message)
+        this.props.updateQuickSend(command, message);
     }
     // 电话
     audioCall(show = !this.state.showEmoji) {
@@ -220,10 +388,14 @@ export default class MessageInput extends Component {
     }
     // 屏幕截屏
     async screenShot() {
+        // if (!isElectron()) {
+        //     return;
+        // }
         // 触发点击截屏事件
         let returnResult = ipcRenderer.sendSync("screenShot");
-
+        // let ret = wfc.screenShot();
         if (returnResult.done === "done" && returnResult.code == "1") {
+            // if (ret === "done") {
             // 图片args
             var args = ipcRenderer.sendSync("file-paste");
             // 如果有图像
@@ -258,12 +430,47 @@ export default class MessageInput extends Component {
         var input = this.refs.input;
 
         //input.value += `[${emoji}]`;
-        input.value += emoji;
+        // input.value += emoji;
+        this.placeCaretAtEnd(input);
+        this.insertTextAtCaret(emojiParse(emoji).replace(/https:\/\/twemoji\.maxcdn\.com\/v\/12\.1\.6\/72x72\//g,'assets/twemoji/72x72/'));
+        // console.log(emojiParse(emoji).replace('https://twemoji.maxcdn.com/v/12.1.6/72x72/','/assets/twemoji/72x72/'));
         input.focus();
     }
 
+    createElementFromHTML(htmlString) {
+        let div = document.createElement("div");
+        div.innerHTML = htmlString.trim();
+
+        // Change this to div.childNodes to support multiple top-level nodes
+        return div.firstChild;
+    }
+
+    insertTextAtCaret(text) {
+        let sel, range;
+        if (window.getSelection) {
+            sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                range = sel.getRangeAt(0);
+                range.deleteContents();
+                if (text.startsWith("<")) {
+                    let imgEmoji = this.createElementFromHTML(text);
+                    range.insertNode(imgEmoji);
+                    range = document.createRange();
+                    range.setStartAfter(imgEmoji);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else {
+                    range.insertNode(document.createTextNode(text));
+                }
+            }
+        } else if (document.selection && document.selection.createRange) {
+            document.selection.createRange().text = text;
+        }
+    }
+
     async batchProcess(file) {
-        console.log("----------——————————————————什么地址吗？" + file);
+        // console.log("----------——————————————————什么地址吗？" + file);
         if (this.canisend() === false) {
             return;
         }
@@ -357,6 +564,9 @@ export default class MessageInput extends Component {
     };
 
     componentDidMount() {
+        localStorage.setItem("isWin", true);
+        this.props.initQuickSend();
+        // this.props.HistData();
         wfc.eventEmitter.on(
             EventType.GroupInfosUpdate,
             this.onGroupInfosUpdate
@@ -368,6 +578,10 @@ export default class MessageInput extends Component {
         if (this.props.conversation && !this.tribute) {
             this.initMention(this.props.conversation);
         }
+        ipcRenderer.on('downloaded-tip-notify', (event) => {
+            console.log('downloaded-tip-notify');
+            this.downloadedTipNotify();
+        });
     }
 
     componentWillUnmount() {
@@ -391,34 +605,49 @@ export default class MessageInput extends Component {
             return;
         }
 
-        if (
-            this.props.conversation &&
-            !this.props.conversation.equal(nextProps.conversation)
-        ) {
-            let text = input.value.trim();
-            let conversationInfo = wfc.getConversationInfo(
-                this.props.conversation
-            );
-            if (text !== conversationInfo.draft) {
-                wfc.setConversationDraft(this.props.conversation, text);
+        if (this.props.conversation) {
+            if(!this.props.conversation.type){
+                return null;
             }
+            if(!this.props.conversation.equal(nextProps.conversation)){
+                // let text = input.value.trim();  2
+                let text = input.innerHTML.trim();
+                let conversationInfo = wfc.getConversationInfo(
+                    this.props.conversation
+                );
+                //  3
+                if (!conversationInfo) {
+                    return;
+                }
+                if (text !== conversationInfo.draft) {
+                    wfc.setConversationDraft(this.props.conversation, text);
+                }
 
-            conversationInfo = wfc.getConversationInfo(nextProps.conversation);
-            input.value = conversationInfo.draft ? conversationInfo.draft : "";
+                conversationInfo = wfc.getConversationInfo(nextProps.conversation);
+                // input.value = conversationInfo.draft ? conversationInfo.draft : "";  4
+                input.innerHTML = conversationInfo ? conversationInfo.draft : "";
 
-            if (this.tribute) {
-                this.tribute.detach(document.getElementById("messageInput"));
-                this.tribute = null;
-            }
+                if (this.tribute) {
+                    this.tribute.detach(document.getElementById("messageInput"));
+                    this.tribute = null;
+                }
 
-            if (this.shouldHandleMention(nextProps.conversation)) {
-                this.initMention(nextProps.conversation);
+                if (this.shouldHandleMention(nextProps.conversation)) {
+                    this.initMention(nextProps.conversation);
+                }
             }
         } else if (nextProps.conversation) {
             let conversationInfo = wfc.getConversationInfo(
                 nextProps.conversation
             );
-            input.value = conversationInfo.draft ? conversationInfo.draft : "";
+            //  5
+            if (!conversationInfo) {
+                return;
+            }
+            // input.value = conversationInfo.draft ? conversationInfo.draft : "";  6
+            input.innerHTML = conversationInfo.draft
+                ? conversationInfo.draft
+                : "";
 
             if (
                 !this.tribute &&
@@ -433,7 +662,8 @@ export default class MessageInput extends Component {
         var input = this.refs.input;
         let groupDisplayName = wfc.getGroupMemberDisplayNameEx(mentionUser);
         if (mentionUser) {
-            input.value += " @" + groupDisplayName + " ";
+            // input.value += " @" + groupDisplayName + " "; 7
+            input.innerHTML += " @" + groupDisplayName + " ";
             this.mentions.push({
                 key: groupDisplayName,
                 value: "@" + mentionUser.uid,
@@ -512,7 +742,13 @@ export default class MessageInput extends Component {
             this.props.conversation &&
             this.props.conversation.type === ConversationType.Group;
         let enableMultiCall = false;
-
+        var {
+            getHistoryList,
+            searchHistory,
+            searchingText,
+            getList,
+            historyList,
+        } = this.props;
         return (
             <div
                 className={clazz(classes.container, this.props.className, {
@@ -591,18 +827,24 @@ export default class MessageInput extends Component {
                         className="icon-ion-scissors"
                         id="screenShot"
                         onClick={(e) => canisend && this.screenShot()}
-                        style={{
-                            color: "black",
-                        }}
+                        // style={{
+                        //     color: "black",
+                        // }}
                     />
                     <i
                         className="icon-ion-android-happy"
                         id="showEmoji"
                         onClick={(e) => canisend && this.toggleEmoji()}
-                        style={{
-                            color: "black",
-                        }}
+                        // style={{
+                        //     color: "black",
+                        // }}
                     />
+
+                    <span title="发送抖屏"
+                        className="iconfont icon-doudong"
+                        id="shake"
+                        onClick={(e) => canisend && this.toggShake(e)}
+                    ></span>
 
                     {/* <i
                         className="icon-ion-chatbox-working"
@@ -610,6 +852,44 @@ export default class MessageInput extends Component {
                         onClick={e => canisend && this.toggleChatHistory()}
                         style={{
                             color: 'green',
+                        }}
+                    /> */}
+
+                    {/* <i
+                        className="icon-ion-android-send"
+                        id="showQuickSend"
+                        onClick={(e) => canisend && this.toggleQuickSend()}
+                        style={{
+                            color: "black",
+                        }}
+                    /> */}
+
+                    <i
+                        className="icon-ion-android-send"
+                        title="快捷回复"
+                        id="showQuickSendList"
+                        onClick={(e) => canisend && this.toggleQuickSendList()}
+                        // style={{
+                        //     color: "black",
+                        // }}
+                    />
+
+                    <i
+                        className="icon-ion-android-time"
+                        title="历史聊天记录"
+                        id="showChatHistory"
+                        onClick={(e) => canisend && this.toggleChatHistory()}
+                        // style={{
+                        //     color: "black",
+                        // }}
+                    />
+
+                    {/* <i
+                        className="icon-ion-android-time"
+                        id="showChatHist"
+                        onClick={(e) => canisend && this.toggleHist()}
+                        style={{
+                            color: "black",
                         }}
                     /> */}
 
@@ -633,9 +913,61 @@ export default class MessageInput extends Component {
                         output={(emoji) => this.writeEmoji(emoji)}
                         show={this.state.showEmoji}
                     />
+
+                    <QuickSend
+                        close={(e) =>
+                            setTimeout(() => this.toggleQuickSend(false), 100)
+                        }
+                        closeAll={() =>
+                            setTimeout(() => this.closeAllQuickSend(), 100)
+                        }
+                        save={(command, message) =>
+                            this.updateQuickSend(command, message)
+                        }
+                        show={this.state.showQuickSend}
+                        quickSendList={this.props.quickSendList}
+                    />
+
+                    <QuickSendList
+                        close={(e) =>
+                            setTimeout(
+                                () => this.toggleQuickSendList(false),
+                                100
+                            )
+                        }
+                        show={this.state.showQuickSendList}
+                        getList={getList}
+                        outputQuickSend={(message) =>
+                            this.outputQuickSend(message)
+                        }
+                        openQuickSetting={() => this.toggleQuickSend(true)}
+                    />
+
+                    <ChatHistory
+                        close={(e) =>
+                            setTimeout(() => this.toggleChatHistory(false), 100)
+                        }
+                        show={this.state.showChatHistory}
+                        getHistoryList={getHistoryList}
+                        search={(text, starttime, endtime) =>
+                            searchHistory(text, starttime, endtime)
+                        }
+                        searchingText={searchingText}
+                        historyList={historyList}
+                    />
+                    {/* <Hist
+                        close={(e) =>
+                            setTimeout(() => this.toggleHist(false), 100)
+                        }
+                        show={this.state.showHist}
+                        HistDate={this.props.HistDate}
+                    /> */}
                 </div>
 
-                <textarea
+                {/* <textarea */}
+                <div
+                    contentEditable={true}
+                    className={classes.test}
                     id="messageInput"
                     ref="input"
                     placeholder="输入内容发送，Ctrl + Enter 换行 ..."

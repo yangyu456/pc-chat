@@ -19,7 +19,7 @@ export default class Aside extends Component {
         }[pathname];
 
         return (
-            <div className={classes.aside}>
+            <aside className={classes.aside}>
                 <nav>
                     <Link className="link" tabIndex="-1" to="/">
                         <span
@@ -61,7 +61,7 @@ export default class Aside extends Component {
                         </span>
                     </Link>
                 </nav>
-            </div>
+            </aside>
         );
     }
 }

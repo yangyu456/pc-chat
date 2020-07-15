@@ -1,18 +1,17 @@
+import React, { Component } from "react";
+import { Modal, ModalBody } from "components/Modal";
+import { inject, observer } from "mobx-react";
 
-import React, { Component } from 'react';
-import { Modal, ModalBody } from 'components/Modal';
-import { inject, observer } from 'mobx-react';
-
-import classes from './style.css';
-import UserList from 'components/UserList';
-import helper from 'utils/helper';
-import wfc from '../../../wfc/client/wfc'
-import Conversation from '../../../wfc/model/conversation';
-import ConversationType from '../../../wfc/model/conversationType';
-import MessageContentMediaType from '../../../wfc/messages/messageContentMediaType';
+import classes from "./style.css";
+import UserList from "components/UserList";
+import helper from "utils/helper";
+import wfc from "../../../wfc/client/wfc";
+import Conversation from "../../../wfc/model/conversation";
+import ConversationType from "../../../wfc/model/conversationType";
+import MessageContentMediaType from "../../../wfc/messages/messageContentMediaType";
 import GroupType from "../../../wfc/model/groupType";
 
-@inject(stores => ({
+@inject((stores) => ({
     show: stores.newchat.show,
     searching: stores.newchat.query,
     mergeImages: stores.newchat.mergeImages,
@@ -46,16 +45,20 @@ export default class NewChat extends Component {
         var selected = this.state.selected;
 
         if (selected.length === 1) {
-            let conversation = new Conversation(ConversationType.Single, selected[0], 0);
+            let conversation = new Conversation(
+                ConversationType.Single,
+                selected[0],
+                0
+            );
             this.props.chatTo(conversation);
         } else {
             // You can not create a chat room by another chat room
             // createChatroom()
-            let groupName = '';
+            let groupName = "";
             for (let i = 0; i < 3 && i < selected.length; i++) {
-                groupName += wfc.getUserDisplayName(selected[i]) + '、';
+                groupName += wfc.getUserDisplayName(selected[i]) + "、";
             }
-            groupName = groupName.substr(0, groupName.lastIndexOf('、'))
+            groupName = groupName.substr(0, groupName.lastIndexOf("、"));
 
             var portraits = [];
             selected.splice(0, 0, wfc.getUserId());
@@ -65,28 +68,45 @@ export default class NewChat extends Component {
             }
             let dataUri = await this.props.mergeImages(portraits);
 
-            wfc.uploadMedia('', dataUri, MessageContentMediaType.Portrait,
+            wfc.uploadMedia(
+                "",
+                dataUri,
+                MessageContentMediaType.Portrait,
                 (remoteUrl) => {
-                    wfc.createGroup(null, GroupType.Restricted, groupName, remoteUrl, selected, [0], null,
+                    //remoteUrl
+                    wfc.createGroup(
+                        null,
+                        GroupType.Restricted,
+                        groupName,
+                        remoteUrl,
+                        selected,
+                        [0],
+                        null,
                         (groupId) => {
-                            let conversation = new Conversation(ConversationType.Group, groupId, 0);
+                            let conversation = new Conversation(
+                                ConversationType.Group,
+                                groupId,
+                                0
+                            );
                             this.props.chatTo(conversation);
                         },
                         (errorCode) => {
-                            console.log('create group error', errorCode);
-                        });
+                            console.log("create group error", errorCode);
+                        }
+                    );
                 },
                 (errorCode) => {
-                    console.log('upload media error', errorCode);
+                    console.log("upload media error", errorCode);
                 },
                 (current, total) => {
                     // do nothing
-                });
-        };
+                }
+            );
+        }
 
         this.close();
         setTimeout(() => {
-            document.querySelector('#messageInput').focus();
+            document.querySelector("#messageInput").focus();
         });
     }
 
@@ -106,19 +126,21 @@ export default class NewChat extends Component {
         }
 
         return (
-            <UserList {...{
-                ref: 'users',
+            <UserList
+                {...{
+                    ref: "users",
 
-                search,
-                getList,
-                searching,
+                    search,
+                    getList,
+                    searching,
 
-                onChange(selected) {
-                    self.setState({
-                        selected,
-                    });
-                }
-            }} />
+                    onChange(selected) {
+                        self.setState({
+                            selected,
+                        });
+                    },
+                }}
+            />
         );
     }
 
@@ -126,35 +148,35 @@ export default class NewChat extends Component {
         return (
             <Modal
                 fullscreen={true}
-                onCancel={e => this.props.close()}
-                show={this.props.show}>
+                onCancel={(e) => this.props.close()}
+                show={this.props.show}
+            >
                 <ModalBody className={classes.container}>
                     发起聊天 ({this.state.selected.length} / 20)
-
                     <div className={classes.avatars}>
-                        {
-                            this.state.selected.map((e, index) => {
-                                var user = this.props.getUser(e);
-                                return (
-                                    <img
-                                        key={index}
-                                        onClick={ev => this.refs.users.removeSelected(e)}
-                                        src={user.portrait} />
-                                );
-                            })
-                        }
+                        {this.state.selected.map((e, index) => {
+                            var user = this.props.getUser(e);
+                            return (
+                                <img
+                                    key={index}
+                                    onClick={(ev) =>
+                                        this.refs.users.removeSelected(e)
+                                    }
+                                    src={user.portrait}
+                                />
+                            );
+                        })}
                     </div>
-
                     {this.renderList()}
-
                     <div>
                         <button
                             disabled={!this.state.selected.length}
-                            onClick={e => this.chat()}>
+                            onClick={(e) => this.chat()}
+                        >
                             发起聊天
                         </button>
 
-                        <button onClick={e => this.close()}>取消</button>
+                        <button onClick={(e) => this.close()}>取消</button>
                     </div>
                 </ModalBody>
             </Modal>

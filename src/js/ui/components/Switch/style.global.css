@@ -11,13 +11,14 @@
 }
 
 .Switch input:checked + .Switch--fake::before {
-    background: rgba(157, 166, 216, 1);
+    /* background: rgba(157, 166, 216, 1); */
+    background: #4071db;
 }
 
 .Switch input:checked + .Switch--fake::after {
     left: auto;
     right: 0;
-    background: #3f51b5;
+    background: #ffffff;
 }
 
 .Switch--fake {
@@ -35,8 +36,8 @@
 .Switch--fake::before {
     display: block;
     width: 35px;
-    height: 14px;
-    margin-top: 3px;
+    height: 20px;
+    margin-top: 2px;
     background: rgba(0, 0, 0, .26);
     border-radius: 14px;
     transition: .5s ease-in-out;
@@ -44,14 +45,15 @@
 
 .Switch--fake::after {
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 20px;
-    height: 20px;
+    left: 1px;
+    top: 3px;
+    width: 17px;
+    height: 17px;
     border-radius: 20px;
     background: #fff;
     box-sizing: border-box;
     box-shadow: 0 3px 4px 0 rgba(0, 0, 0, .5);
+    /* border: 1px solid rgba(0, 0, 0, .5); */
     transition: .2s;
 }
 
@@ -61,6 +63,6 @@
 
 .Switch input:disabled + .Switch--fake::after {
     left: auto;
-    right: 0;
+    right: 3px;
     background: #bdbdbd;
 }

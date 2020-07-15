@@ -40,6 +40,9 @@ import KickoffGroupMemberNotification from '../../../wfc/messages/notification/k
         }
 
         stores.userinfo.toggle(false);
+        setTimeout(() => {
+            stores.members.toggle(true);
+        },200);
     },
     refreshContacts: async (user) => {
         var {updateUser, filter, filtered} = stores.contacts;
@@ -91,7 +94,7 @@ class UserInfo extends Component {
             });
             this.toggleEdit(false);
         } else {
-            this.props.showMessage('Failed to set remark name.');
+            this.props.showMessage('设置备注名字失败');
         }
     }
 
@@ -102,19 +105,23 @@ class UserInfo extends Component {
 
         setTimeout(() => {
             //if (helper.isContact(user) || helper.isChatRoom(user.UserName)) {
-            if (wfc.isMyFriend(user.uid)) {
-                this.props.toggle(false);
-                let conversation = new Conversation(ConversationType.Single, user.uid, 0);
-                this.props.chatTo(conversation);
-                document.querySelector('#messageInput').focus();
-            } else {
-                this.props.showAddFriend(user);
-            }
+            // if (wfc.isMyFriend(user.uid)) {
+            //     this.props.toggle(false);
+            //     let conversation = new Conversation(ConversationType.Single, user.uid, 0);
+            //     this.props.chatTo(conversation);
+            //     document.querySelector('#messageInput').focus();
+            // } else {
+            //     this.props.showAddFriend(user);
+            // }
+            this.props.toggle(false);
+            let conversation = new Conversation(ConversationType.Single, user.uid, 0);
+            this.props.chatTo(conversation);
+            document.querySelector('#messageInput').focus();
         });
     }
 
     render() {
-        var {uid, UserName, portrait, displayName, RemarkName = 'remarkName', Signature = 'signature', City = 'city', Province = 'province'} = this.props.user;
+        var {uid, UserName, portrait, displayName, RemarkName = '备注', Signature = '个性签名', City = '省/市', Province = '区'} = this.props.user;
         var isFriend = uid ? wfc.isMyFriend(uid) : false;
         var pallet = this.props.pallet;
         var isme = this.props.isme();
@@ -133,7 +140,7 @@ class UserInfo extends Component {
                 -webkit-linear-gradient(left, rgb(${background[0]}, ${background[1]}, ${background[2]}) 5%, rgba(${background[0]}, ${background[1]}, ${background[2]}, 0) 15%),
                 -webkit-linear-gradient(right, rgb(${background[0]}, ${background[1]}, ${background[2]}) 5%, rgba(${background[0]}, ${background[1]}, ${background[2]}, 0) 15%)
             `;
-            background = `rgba(${background[0]}, ${background[1]}, ${background[2]}, 1)`;
+            // background = `rgba(${background[0]}, ${background[1]}, ${background[2]}, 1)`;
             fontColor = `rgb(
                 ${pallet4font[0]},
                 ${pallet4font[1]},
@@ -203,7 +210,7 @@ class UserInfo extends Component {
                                             className="icon-ion-android-map"
                                             style={{color: fontColor}}/>
 
-                                        {City || 'UNKNOW'}, {Province || 'UNKNOW'}
+                                        {City || ''}, {Province || ''}
                                     </div>
                                 </div>
                             ) : (
@@ -216,7 +223,7 @@ class UserInfo extends Component {
                                         marginTop: 20,
                                         marginBottom: -30,
                                     }}>
-                                    Delete
+                                    删除成员
                                 </div>
                             )
                         }
@@ -228,7 +235,8 @@ class UserInfo extends Component {
                                 color: buttonColor,
                                 opacity: .6,
                             }}>
-                            {isFriend ? 'Send Message' : 'Add Friend'}
+                            {/* {isFriend ? '发送消息' : '添加朋友'} */}
+                            发送消息
                         </div>
                     </div>
 
@@ -239,7 +247,7 @@ class UserInfo extends Component {
                                 autoFocus={true}
                                 defaultValue={RemarkName}
                                 onKeyPress={e => this.handleEnter(e)}
-                                placeholder="Type the remark name"
+                                placeholder="在此输入备注"
                                 ref="input"
                                 type="text"/>
                         )

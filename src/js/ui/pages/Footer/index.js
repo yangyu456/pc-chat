@@ -20,48 +20,6 @@ export default class Footer extends Component {
 
         return (
             <footer className={classes.footer}>
-                <nav>
-                    <Link className="link" tabIndex="-1" to="/">
-                        <span
-                            className={clazz({
-                                [classes.active]: pathname === "/",
-                            })}
-                        >
-                            <i className="icon-ion-chatbubble-working" />
-                        </span>
-                    </Link>
-
-                    <Link className="link" tabIndex="-1" to="/contacts">
-                        <span
-                            className={clazz({
-                                [classes.active]: pathname === "/contacts",
-                            })}
-                        >
-                            <i className="icon-ion-ios-book-outline" />
-                        </span>
-                    </Link>
-
-                    <Link className="link" tabIndex="-1" to="/personal">
-                        <span
-                            className={clazz({
-                                [classes.active]: pathname === "/personal",
-                            })}
-                        >
-                            <i className="icon-ion-ios-person-outline" />
-                        </span>
-                    </Link>
-
-                    <Link className="link" tabIndex="-1" to="/settings">
-                        <span
-                            className={clazz({
-                                [classes.active]: pathname === "/settings",
-                            })}
-                        >
-                            <i className="icon-ion-android-more-vertical" />
-                        </span>
-                    </Link>
-                </nav>
-
                 <div className={classes.right}>
                     {React.createElement(component)}
                 </div>

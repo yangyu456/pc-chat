@@ -103,6 +103,12 @@ export default class Settings extends Component {
                                 />
                             </label>
                         </li>
+                        <li>
+                            <label htmlFor="versionControl">
+                                <span>当前版本</span>
+                                <span>V1.0.2</span>
+                            </label>
+                        </li>
                         {/*
                         <li>
                             <label htmlFor="startup">

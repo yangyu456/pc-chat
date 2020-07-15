@@ -41,9 +41,9 @@ export default class Home extends Component {
         axios.defaults.baseURL = Config.APP_SERVER;
         // 提醒内容
         this.getRemindInfo();
-        ipcRenderer.on("get-remindinfo-reply", (event, arg) => {
-            console.log("渲染进程" + arg);
-        });
+        // ipcRenderer.on("get-remindinfo-reply", (event, arg) => {
+        //     console.log("渲染进程" + arg);
+        // });
     }
 
     async getRemindInfo() {

@@ -1,6 +1,7 @@
 .inner {
     display: flex;
     justify-content: space-between;
+    overflow: hidden;
 }
 
 .inner.hideConversation {
@@ -15,38 +16,38 @@
 
 .left {
     position: relative;
-    width: 311px;
+    width: 290px;
     box-shadow: inset -1px 0 0 0 #eaedea;
     background-color: #f5f5f5;
 
     & .addChat {
         position: absolute;
-        right: -20px;
-        top: 40px;
-        height: 40px;
-        width: 40px;
-        border-radius: 100%;
-        line-height: 40px;
+        right: 26px;
+        top: 14px;
+        height: 32px;
+        width: 32px;
+        line-height: 32px;
         text-align: center;
-        font-size: 20px;
-        background: #e1306c;
-        box-shadow: 0 0 24px 0 rgba(119, 119, 119, 0.5);
+        font-size: 18px;
+        color: #9b9b9b;
+        background: #f5f5f5;
+        border: 1px solid #e2e2e2;
         cursor: pointer;
         z-index: 9;
     }
 }
 
 .right {
-    width: calc(100vw - 311px);
+    width: calc(100vw - 290px -70px);
 }
 
 @media (width <= 800px) {
     .left {
-        width: 280px;
+        width: 260px;
 
         & .addChat {
-            right: -15px;
-            top: 30px;
+            right: 9px;
+            top: 14px;
             height: 30px;
             width: 30px;
             line-height: 30px;
@@ -55,6 +56,6 @@
     }
 
     .right {
-        width: calc(100vw - 280px);
+        width: calc(100vw - 260px -70px);
     }
 }

@@ -45,10 +45,27 @@ export default class BroadcastView extends Component {
                     className={classes.group}
                     key={index}>
                     <div className={classes.header}>
-                        <label>
+                        {e.expand?(
+                            <i  onClick={() => this.changeUp(e)}
+                                className="icon-ion-chevron-down"
+                                style={{
+                                    color: "#b5b5b5",
+                                    fontSize: "16px"
+                                }}
+                            />
+                        ):(
+                            <i  onClick={() => this.changeUp(e)}
+                                className="icon-ion-chevron-right"
+                                style={{
+                                    color: "#b5b5b5",
+                                    fontSize: "16px"
+                                }}
+                            />
+                        )}
+                        <label onClick={() => this.changeUp(e)}>
                             {e.prefix}
                         </label>
-                        <CheckBox style={{paddingLeft:'70%'}} className={classes.tagCheck} onClick={() => this.toggleSelectGroupMain(e.prefix,e.list)}></CheckBox>
+                        <CheckBox className={classes.tagCheck} onClick={() => this.toggleSelectGroupMain(e.prefix,e.list)}></CheckBox>
                         <img onClick={() => this.changeUp(e)} className={classes.icon} src={e.expand ? 'assets/images/extract.png' : 'assets/images/expand.png'}></img>
                         <span style={{
                             position: 'absolute',
@@ -107,14 +124,18 @@ export default class BroadcastView extends Component {
             );
         });
     }
+
+    expandTag(obj) {
+        console.log(obj);
+    }
     
-    renderGroupList(list,selectedList,selectedListMember){
-        return list.map((e, index) => {
+    renderGroupList(list,selectedListMember){
+        return list.map((e) => {
             let groupId = e.id;
             return (<div className={classes.group} key={e.id}>
-                <div className={classes.header}>
+                <div className={classes.header} onClick={(event) => this.expandTag(event)}>
                     <label>{e.groupName}</label>
-                    <CheckBox style={{paddingLeft:'80%'}} className={classes.tagCheck} onClick={() => this.toggleSelectGroup(groupId,e.users)}></CheckBox>
+                    <CheckBox className={classes.tagCheck} onClick={() => this.toggleSelectGroup(groupId,e.users)}></CheckBox>
                 </div>
                 {e.users.map((e) => {
                     let bol = false;
@@ -142,13 +163,14 @@ export default class BroadcastView extends Component {
                                 }} />
                         </div>
                         <div className={classes.info}>
-                            <p
+                            <label
                                 className={classes.username}
-                            >{e.name}</p>
+                            >{e.name}
                             <CheckBox
                                 className={classes.tagCheck} checked={bol?'checked':''}
                                 onClick={() => this.toggleSelectGroupMember(e,groupId)}
                             />
+                            </label>
                         </div>
                     </div>);
                 })}
@@ -227,29 +249,31 @@ export default class BroadcastView extends Component {
         var { query, result } = this.props.filtered;
         var tagList = this.props.tagList;
         var broadcastContent = this.props.broadcastContent;
-        var selectedList = this.props.broadCastGroupSelect;
         var selectedListMember = this.props.broadcastGroupMember;
         var selectedListMemberMain = this.props.broadcastGroupMemberMain;
         return (
             <div className={classes.container}>
                 <div className={classes.searchBar}>
                     {/* <i className="icon-ion-ios-search-strong" /> */}
+                    <div className={classes.btnGroup}>
+                        <button type="button" className={classes.broadBackBtn} onClick={() => this.backBroadcast()}>返回</button>
+                        <div>发布广播</div>
+                        <button type="button" className={classes.broadBtn} onClick={() => this.saveBroadcast()}>发布</button>
+                    </div>
+                </div>
+                <div>
                     <textarea
                         className={classes.broadcastContent}
                         onChange={e => this.inputBroadCast(e.target.value)}
                         value={broadcastContent ? broadcastContent : ''}
                         placeholder='请输入广播内容...'
                         ref="broadcast"
-                        row="5">
+                        rows="6">
                     </textarea>
-                    <div className={classes.btnGroup}>
-                        <button type="button" className={classes.broadBackBtn} onClick={() => this.backBroadcast()}>返回</button>
-                        <button type="button" className={classes.broadBtn} onClick={() => this.saveBroadcast()}>发布</button>
-                    </div>
                 </div>
                 <div className={classes.contacts}
-                    ref="container" style={{paddingTop:'30px'}}>
-                    {this.renderGroupList(tagList,selectedList,selectedListMember)}
+                    ref="container" style={{paddingTop:'10px'}}>
+                    {this.renderGroupList(tagList,selectedListMember)}
                     {this.renderColumns(result, 0, query , selectedListMemberMain)}
                 </div>
             </div>

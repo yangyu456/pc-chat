@@ -1,33 +1,31 @@
 :root {
-    --icon-color: #777;
+    --icon-color: #fff;
     --active: #34b7f1;
     --shadow-color: #eaedea;
 }
 
 .aside {
-    position: relative;
-    background: #fff;
+    position: absolute;
+    top: 53px;
+    left: 0;
+    color: #fff;
 
     & > nav {
         display: flex;
-        width: calc(311px - 34px);
-        height: 60px;
-        padding: 17px 17px 0;
-        justify-content: space-between;
-        box-shadow: inset 0 1px 0 0 var(--shadow-color);
-        background-color: #c8d4e4;
+        flex-direction: column;
+        width: 100%;
+        height: 200px;
+        -webkit-app-region: no-drag;
     }
 
     & > nav span {
         display: block;
-        width: 24px;
-        height: 27px;
         text-align: center;
         cursor: pointer;
     }
 
     & > nav i {
-        color: var(--icon-color);
+        color: #fff;
         font-size: 24px;
         cursor: pointer;
     }
@@ -45,7 +43,7 @@
         position: absolute;
         bottom: 0;
         left: 0;
-        height: 1px;
+        height: 0px;
         width: 100%;
         background: var(--active);
     }
@@ -55,7 +53,7 @@
     }
 }
 
-.contacts {
+/* .contacts {
     box-shadow: inset 0 1px 0 0 var(--shadow-color);
     position: relative;
     display: flex;
@@ -86,9 +84,9 @@
         display: flex;
         justify-content: space-between;
     }
-}
+} */
 
-.settings {
+/* .settings {
     box-shadow: inset 0 1px 0 0 var(--shadow-color);
     display: flex;
     height: 60px;
@@ -127,18 +125,18 @@
         transform: translateY(-50%);
         font-size: 20px;
     }
-}
+} */
 
-.options {
+/* .options {
     display: inline-block;
     margin-right: 12px;
     font-family: "Roboto";
     font-size: 14px;
     color: rgba(0, 0, 0, 0.8);
     text-transform: uppercase;
-}
+} */
 
-@media (width <= 800px) {
+/* @media (width <= 800px) {
     .aside {
         & > nav {
             width: calc(280px - 34px);
@@ -188,4 +186,4 @@
     .options {
         font-size: 12px;
     }
-}
+} */

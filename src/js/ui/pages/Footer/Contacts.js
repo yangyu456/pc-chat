@@ -1,11 +1,10 @@
+import React, { Component } from "react";
+import { inject } from "mobx-react";
 
-import React, { Component } from 'react';
-import { inject } from 'mobx-react';
+import classes from "./style.css";
+import Switch from "components/Switch";
 
-import classes from './style.css';
-import Switch from 'components/Switch';
-
-@inject(stores => ({
+@inject((stores) => ({
     filter: stores.contacts.filter,
     showGroup: stores.contacts.showGroup,
     toggleGroup: stores.contacts.toggleGroup,
@@ -14,7 +13,7 @@ export default class Filter extends Component {
     // Improve filter performance
     timer;
 
-    doFilter(text = '') {
+    doFilter(text = "") {
         text = text.trim();
 
         clearTimeout(this.timer);

@@ -1,19 +1,18 @@
+import { observable, action } from "mobx";
+import { ipcRenderer } from "../../platform";
+import axios from "axios";
+import pinyin from "../han";
 
-import { observable, action } from 'mobx';
-import { ipcRenderer } from '../../platform';
-import axios from 'axios';
-import pinyin from '../han';
-
-import chat from './chat';
-import storage from 'utils/storage';
-import helper from 'utils/helper';
-import { normalize } from 'utils/emoji';
-import wfc from '../../wfc/client/wfc'
-import UserInfo from '../../wfc/model/userInfo';
-import GroupInfo from '../../wfc/model/groupInfo';
-import NullUserInfo from '../../wfc/model/nullUserInfo';
-import NullGroupInfo from '../../wfc/model/nullGroupInfo';
-import { func } from 'prop-types';
+import chat from "./chat";
+import storage from "utils/storage";
+import helper from "utils/helper";
+import { normalize } from "utils/emoji";
+import wfc from "../../wfc/client/wfc";
+import UserInfo from "../../wfc/model/userInfo";
+import GroupInfo from "../../wfc/model/groupInfo";
+import NullUserInfo from "../../wfc/model/nullUserInfo";
+import NullGroupInfo from "../../wfc/model/nullGroupInfo";
+import { func } from "prop-types";
 
 class Contacts {
     @observable loading = false;
@@ -35,14 +34,14 @@ class Contacts {
     @observable broadCastGroupSelectMain = [];
     @observable broadcastGroupMemberMain = [];
     @observable filtered = {
-        query: '',
-        result: []
+        query: "",
+        result: [],
     };
 
     @action group(list, showall = false) {
         var mappings = {};
         var sorted = [];
-        list.map(e => {
+        list.map((e) => {
             if (!e) {
                 return;
             }
@@ -76,7 +75,7 @@ class Contacts {
             sorted.push({
                 prefix: key,
                 list: mappings[key],
-                expand: false
+                expand: false,
             });
         }
 
@@ -87,7 +86,7 @@ class Contacts {
 
     contactItemName(item) {
         //原代码，还原请解开这个注释
-        var name = '';
+        var name = "";
         // if (item instanceof UserInfo) {
         //     name = wfc.getUserDisplayName(item.uid);
         // } else if (item instanceof GroupInfo) {
@@ -95,7 +94,7 @@ class Contacts {
         // }
         if (item.hasOwnProperty("uid")) {
             // 如果是用户
-            name = item.name
+            name = item.name;
         } else if (item.hasOwnProperty("groupName")) {
             //如果是自定义分组
             name = item.groupName;
@@ -104,9 +103,9 @@ class Contacts {
         // return item.name;
     }
 
-    // TODO refactor to getContact, and the return mayby userInfo, GroupInfo 
+    // TODO refactor to getContact, and the return mayby userInfo, GroupInfo
     @action async getUser(userid) {
-        return self.memberList.find(e => e.uid === userid);
+        return self.memberList.find((e) => e.uid === userid);
         //return self.memberList.find(e => e.username === userid);
     }
 
@@ -117,8 +116,8 @@ class Contacts {
         //let friendListIds = wfc.getMyFriendList(false);
         let friendListIds = [];
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
-        let response = await axios.post('/getStructureChatMembers', {
-            username: selfUserInfo.name
+        let response = await axios.post("/getStructureChatMembers", {
+            username: selfUserInfo.name,
         });
         //console.log('---------- getStructureChatMembers', response.data);
         if (response.data) {
@@ -136,7 +135,10 @@ class Contacts {
             friendListIds.forEach(function (dept, index, arr) {
                 //如果组织内有人员
                 if (dept.members.length > 0) {
-                    let obj = { deptName: dept.structureName, pkStructureId: dept.pkStructureId };
+                    let obj = {
+                        deptName: dept.structureName,
+                        pkStructureId: dept.pkStructureId,
+                    };
                     dept.members.forEach(function (member, mi, ma) {
                         //合并对象
                         var assignObj = Object.assign(member, obj);
@@ -180,8 +182,8 @@ class Contacts {
         self.checkedList = [];
         let groupList = [];
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
-        let response = await axios.post('/group/querySelfGroupList', {
-            username: selfUserInfo.name
+        let response = await axios.post("/group/querySelfGroupList", {
+            username: selfUserInfo.name,
         });
         if (response.data) {
             switch (response.data.code) {
@@ -201,8 +203,8 @@ class Contacts {
         //查询个人自定义分组下的成员
         self.loading = true;
         var groupMemberList = [];
-        let response = await axios.post('/group/querySelfGroupUsersList', {
-            groupId: self.tagId
+        let response = await axios.post("/group/querySelfGroupUsersList", {
+            groupId: self.tagId,
         });
         if (response.data) {
             switch (response.data.code) {
@@ -219,12 +221,13 @@ class Contacts {
         return (window.checkedList = self.checkedList);
     }
 
-    @action filter(text = '', showall = false) {
+    @action filter(text = "", showall = false) {
         let textTemp = text;
-        text = pinyin.letter(text.toLocaleLowerCase(), '', null);
-        var list = self.memberList.filter(e => {
+        text = pinyin.letter(text.toLocaleLowerCase(), "", null);
+        var list = self.memberList.filter((e) => {
             let name = self.contactItemName(e);
-            var res = pinyin.letter(name, '', null).toLowerCase().indexOf(text) > -1;
+            var res =
+                pinyin.letter(name, "", null).toLowerCase().indexOf(text) > -1;
             // if (e.RemarkName) {
             //     res = res || pinyin.letter(e.RemarkName, null).toLowerCase().indexOf(text) > -1;
             // }
@@ -232,26 +235,26 @@ class Contacts {
         });
 
         if (!self.showGroup) {
-            list = list.filter(e => {
+            list = list.filter((e) => {
                 return !(e instanceof GroupInfo);
             });
         }
 
         self.filtered = {
             query: textTemp,
-            result: list.length ? self.group(list, showall) : []
+            result: list.length ? self.group(list, showall) : [],
         };
     }
-    
-    @action inputGroupName(text = '') {
+
+    @action inputGroupName(text = "") {
         self.updateGroupNameValue = text;
     }
 
-    @action inputAddGroupName(text = '') {
+    @action inputAddGroupName(text = "") {
         self.addGroupNameValue = text;
     }
 
-    @action inputBroadCast(text = ''){
+    @action inputBroadCast(text = "") {
         self.broadcastContent = text;
     }
 
@@ -269,8 +272,8 @@ class Contacts {
         var list = self.filtered.result;
         self.filtered = {
             query: searchKey,
-            result: self.expandGroup(list, prefix, expandFlag)
-        }
+            result: self.expandGroup(list, prefix, expandFlag),
+        };
     }
 
     @action toggleGroup(showGroup) {
@@ -285,7 +288,7 @@ class Contacts {
     }
 
     @action hideTagInfo() {
-        if(!self.tagShow){
+        if (!self.tagShow) {
             return null;
         }
         self.tagShow = false;
@@ -317,19 +320,25 @@ class Contacts {
                 bol = true;
                 // 更新个人自定义分组下的成员
                 let updateMember = {
-                    "id": checkedListtmp[i].id,
-                    "showIndex": "0",
-                    "enabled": enabled,
-                    "username": item.username
+                    id: checkedListtmp[i].id,
+                    showIndex: "0",
+                    enabled: enabled,
+                    username: item.username,
                 };
-                let response = await axios.post('/group/updateSelfGroupUsers', updateMember);
+                let response = await axios.post(
+                    "/group/updateSelfGroupUsers",
+                    updateMember
+                );
                 if (response.data) {
                     switch (response.data.code) {
                         case 0:
                             console.log("updateSelfGroupUsers success");
-                            let responses = await axios.post('/group/querySelfGroupUsersList', {
-                                groupId: self.tagId
-                            });
+                            let responses = await axios.post(
+                                "/group/querySelfGroupUsersList",
+                                {
+                                    groupId: self.tagId,
+                                }
+                            );
                             if (responses.data) {
                                 switch (responses.data.code) {
                                     case 0:
@@ -352,18 +361,24 @@ class Contacts {
         //添加个人自定义分组下的成员
         if (!bol) {
             let newMember = {
-                "username": item.username,
-                "groupId": self.tagId,
-                "showIndex": 0,
-                "enabled": "1"
+                username: item.username,
+                groupId: self.tagId,
+                showIndex: 0,
+                enabled: "1",
             };
-            let response = await axios.post('/group/addSelfGroupUsers', newMember);
+            let response = await axios.post(
+                "/group/addSelfGroupUsers",
+                newMember
+            );
             if (response.data) {
                 switch (response.data.code) {
                     case 0:
-                        let responses = await axios.post('/group/querySelfGroupUsersList', {
-                            groupId: self.tagId
-                        });
+                        let responses = await axios.post(
+                            "/group/querySelfGroupUsersList",
+                            {
+                                groupId: self.tagId,
+                            }
+                        );
                         if (responses.data) {
                             switch (responses.data.code) {
                                 case 0:
@@ -389,19 +404,19 @@ class Contacts {
         //保存分组并关闭编辑分组
         self.loading = true;
         let updateGroup = {
-            "id":self.tagId,
-            "groupName":self.updateGroupNameValue,
-            "showIndex":"0",
-            "enabled":"1"
-        }
-        let response = await axios.post('/group/updateSelfGroup', updateGroup);
+            id: self.tagId,
+            groupName: self.updateGroupNameValue,
+            showIndex: "0",
+            enabled: "1",
+        };
+        let response = await axios.post("/group/updateSelfGroup", updateGroup);
         if (response.data) {
             switch (response.data.code) {
                 case 0:
-                    console.log("updateSelfGroup Success"+response.data);
+                    console.log("updateSelfGroup Success" + response.data);
                     break;
                 default:
-                    console.log("updateSelfGroup failed"+response.data);
+                    console.log("updateSelfGroup failed" + response.data);
                     break;
             }
         }
@@ -415,30 +430,30 @@ class Contacts {
         self.tagViewShow = false;
     }
 
-    @action saveAddGroupName(){
+    @action saveAddGroupName() {
         //新增自定义分组 保存分组名字
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         let addGroupNameData = {
-            "username":selfUserInfo.name,
-            "groupName":self.addGroupNameValue,
-            "showIndex":"0",
-            "enabled":"1"
+            username: selfUserInfo.name,
+            groupName: self.addGroupNameValue,
+            showIndex: "0",
+            enabled: "1",
         };
         self.saveAddGroupNameReq(addGroupNameData);
     }
 
-    @action async saveAddGroupNameReq(data){
-        let response = await axios.post('/group/addSelfGroup', data);
+    @action async saveAddGroupNameReq(data) {
+        let response = await axios.post("/group/addSelfGroup", data);
         if (response.data) {
             switch (response.data.code) {
                 case 0:
                     self.addGroupNameFlag = true;
                     self.tagId = response.data.result;
                     self.getGroup();
-                    console.log("addSelfGroup Success"+response.data);
+                    console.log("addSelfGroup Success" + response.data);
                     break;
                 default:
-                    console.log("addSelfGroup failed"+response.data);
+                    console.log("addSelfGroup failed" + response.data);
                     break;
             }
         }
@@ -456,7 +471,7 @@ class Contacts {
 
     @action saveAddGroup() {
         //保存并关闭新建分组页面
-        if(!self.addTagViewShow){
+        if (!self.addTagViewShow) {
             return null;
         }
         self.addGroupNameValue = "";
@@ -473,7 +488,7 @@ class Contacts {
 
     @action showBroadCastView() {
         //打开发布广播界面
-        if(self.broadCastShow){
+        if (self.broadCastShow) {
             return null;
         }
         self.broadcastContent = "";
@@ -481,39 +496,39 @@ class Contacts {
         self.broadCastShow = true;
     }
 
-    @action async saveBroadcast(){
+    @action async saveBroadcast() {
         //发布并关闭广播界面
-        if(!self.broadCastShow){
+        if (!self.broadCastShow) {
             return null;
         }
         let userIds = [];
-        self.broadcastGroupMemberMain.forEach((v,i) => {
+        self.broadcastGroupMemberMain.forEach((v, i) => {
             userIds.push(v.uid);
         });
-        self.broadcastGroupMember.forEach((v,i) => {
+        self.broadcastGroupMember.forEach((v, i) => {
             userIds.push(v.uid);
         });
-        if(userIds.length==0){
+        if (userIds.length == 0) {
             //如果没选中任何人
             return null;
         }
-        if(self.broadcastContent==""){
+        if (self.broadcastContent == "") {
             //如果内容为空
             return null;
         }
         let broadcastData = {
-            "fromUserId":wfc.getUserId(),
-            "msgText":self.broadcastContent,
-            "toUserIds":userIds
+            fromUserId: wfc.getUserId(),
+            msgText: self.broadcastContent,
+            toUserIds: userIds,
         };
-        let response = await axios.post('/msg/broadcast', broadcastData);
+        let response = await axios.post("/msg/broadcast", broadcastData);
         if (response.data) {
             switch (response.data.code) {
                 case 0:
-                    console.log("broadcast Success"+response.data);
+                    console.log("broadcast Success" + response.data);
                     break;
                 default:
-                    console.log("broadcast failed"+response.data);
+                    console.log("broadcast failed" + response.data);
                     break;
             }
         }
@@ -536,175 +551,169 @@ class Contacts {
         self.tagShow = false;
     }
 
-    @action toggleSelectGroup(groupId,users) {
+    @action toggleSelectGroup(groupId, users) {
         if (!self.broadCastGroupSelect.includes(groupId)) {
             // Add
-            self.addSelected(groupId,users);
+            self.addSelected(groupId, users);
         } else {
             // Remove
-            self.removeSelected(groupId,users);
+            self.removeSelected(groupId, users);
         }
     }
 
-    @action toggleSelectGroupMain(prefix,users) {
+    @action toggleSelectGroupMain(prefix, users) {
         if (!self.broadCastGroupSelectMain.includes(prefix)) {
             // Add
-            self.addSelectedMain(prefix,users);
+            self.addSelectedMain(prefix, users);
         } else {
             // Remove
-            self.removeSelectedMain(prefix,users);
+            self.removeSelectedMain(prefix, users);
         }
     }
 
-    @action toggleSelectGroupMember(member,groupId) {
+    @action toggleSelectGroupMember(member, groupId) {
         member.groupId = groupId;
-        let result = self.broadcastGroupMember.some(item=>{
-            if(item.uid==member.uid&&item.groupId==member.groupId){
+        let result = self.broadcastGroupMember.some((item) => {
+            if (item.uid == member.uid && item.groupId == member.groupId) {
                 return true;
             }
         });
-        if(!result){
-            self.addSelectedMember(member);  
+        if (!result) {
+            self.addSelectedMember(member);
         } else {
-            self.removeSelectedMember(member);  
+            self.removeSelectedMember(member);
         }
     }
 
-    @action toggleSelectGroupMemberMain(member,groupId) {
+    @action toggleSelectGroupMemberMain(member, groupId) {
         member.groupId = groupId;
-        let result = self.broadcastGroupMemberMain.some(item=>{
-            if(item.uid==member.uid&&item.groupId==member.groupId){
+        let result = self.broadcastGroupMemberMain.some((item) => {
+            if (item.uid == member.uid && item.groupId == member.groupId) {
                 return true;
             }
         });
-        if(!result){
-            self.addSelectedMemberMain(member);  
+        if (!result) {
+            self.addSelectedMemberMain(member);
         } else {
-            self.removeSelectedMemberMain(member);  
+            self.removeSelectedMemberMain(member);
         }
     }
 
-    @action toggleAddGroupMember(member,groupId) {
+    @action toggleAddGroupMember(member, groupId) {
         member.groupId = groupId;
-        let result = self.broadcastGroupMember.some(item=>{
-            if(item.uid==member.uid&&item.groupId==member.groupId){
+        let result = self.broadcastGroupMember.some((item) => {
+            if (item.uid == member.uid && item.groupId == member.groupId) {
                 return true;
             }
         });
-        if(!result){
-            self.addSelectedMember(member);  
-        } else {
-            return null;
-        }
-    }
-
-    @action toggleAddGroupMemberMain(member,groupId) {
-        member.groupId = groupId;
-        let result = self.broadcastGroupMemberMain.some(item=>{
-            if(item.uid==member.uid&&item.groupId==member.groupId){
-                return true;
-            }
-        });
-        if(!result){
-            self.addSelectedMemberMain(member);  
+        if (!result) {
+            self.addSelectedMember(member);
         } else {
             return null;
         }
     }
 
-    @action addSelected(groupId,users) {
-        let selected = [
-            groupId,
-            ...self.broadCastGroupSelect,
-        ];
+    @action toggleAddGroupMemberMain(member, groupId) {
+        member.groupId = groupId;
+        let result = self.broadcastGroupMemberMain.some((item) => {
+            if (item.uid == member.uid && item.groupId == member.groupId) {
+                return true;
+            }
+        });
+        if (!result) {
+            self.addSelectedMemberMain(member);
+        } else {
+            return null;
+        }
+    }
+
+    @action addSelected(groupId, users) {
+        let selected = [groupId, ...self.broadCastGroupSelect];
         self.broadCastGroupSelect = selected;
-        users.forEach(v => {
+        users.forEach((v) => {
             //批量添加组内人员选中
-            self.toggleAddGroupMember(v,groupId);
+            self.toggleAddGroupMember(v, groupId);
         });
     }
 
-    @action addSelectedMain(groupId,users) {
-        let selected = [
-            groupId,
-            ...self.broadCastGroupSelectMain,
-        ];
+    @action addSelectedMain(groupId, users) {
+        let selected = [groupId, ...self.broadCastGroupSelectMain];
         self.broadCastGroupSelectMain = selected;
-        users.forEach(v => {
+        users.forEach((v) => {
             //批量添加组内人员选中
-            self.toggleAddGroupMemberMain(v,groupId);
+            self.toggleAddGroupMemberMain(v, groupId);
         });
     }
 
-    @action removeSelected(groupId,users) {
+    @action removeSelected(groupId, users) {
         let selected = self.broadCastGroupSelect;
         let index = selected.indexOf(groupId);
         selected = [
             ...selected.slice(0, index),
-            ...selected.slice(index + 1, selected.length)
+            ...selected.slice(index + 1, selected.length),
         ];
         self.broadCastGroupSelect = selected;
         self.removeByGroupId(groupId);
     }
 
-    @action removeSelectedMain(groupId,users) {
+    @action removeSelectedMain(groupId, users) {
         let selected = self.broadCastGroupSelectMain;
         let index = selected.indexOf(groupId);
         selected = [
             ...selected.slice(0, index),
-            ...selected.slice(index + 1, selected.length)
+            ...selected.slice(index + 1, selected.length),
         ];
         self.broadCastGroupSelectMain = selected;
         self.removeByGroupIdMain(groupId);
     }
 
     @action addSelectedMember(member) {
-        let selected = [
-            member,
-            ...self.broadcastGroupMember,
-        ];
+        let selected = [member, ...self.broadcastGroupMember];
         self.broadcastGroupMember = selected;
     }
 
     @action addSelectedMemberMain(member) {
-        let selected = [
-            member,
-            ...self.broadcastGroupMemberMain,
-        ];
+        let selected = [member, ...self.broadcastGroupMemberMain];
         self.broadcastGroupMemberMain = selected;
     }
 
     @action removeSelectedMember(member) {
         let selected = self.broadcastGroupMember;
-        selected.forEach((v,index) => {
-            if(v.uid==member.uid&&v.groupId==member.groupId){
-                selected = [
-                    ...selected.slice(0, index),
-                    ...selected.slice(index + 1, selected.length)
-                ];
+        let i = 0;
+        selected.forEach((v, index) => {
+            if (v.uid == member.uid && v.groupId == member.groupId) {
+                i = index;
+                // selected = [
+                //     ...selected.slice(0, index),
+                //     ...selected.slice(index + 1, selected.length),
+                // ];
             }
         });
+        selected.splice(i,1);
         self.broadcastGroupMemberMain = selected;
     }
 
     @action removeSelectedMemberMain(member) {
         let selected = self.broadcastGroupMemberMain;
-        selected.forEach((v,index) => {
-            if(v.uid==member.uid&&v.groupId==member.groupId){
-                selected = [
-                    ...selected.slice(0, index),
-                    ...selected.slice(index + 1, selected.length)
-                ];
+        let i = 0;
+        selected.forEach((v, index) => {
+            if (v.uid == member.uid && v.groupId == member.groupId) {
+                i = index;
+                // selected = [
+                //     ...selected.slice(0, index),
+                //     ...selected.slice(index + 1, selected.length),
+                // ];
             }
         });
+        selected.splice(i,1);
         self.broadcastGroupMemberMain = selected;
     }
 
     @action removeByGroupId(groupId) {
         let selected = self.broadcastGroupMember;
         let newSelected = [];
-        selected.forEach(v => {
-            if(v.groupId!=groupId){
+        selected.forEach((v) => {
+            if (v.groupId != groupId) {
                 newSelected.push(v);
             }
         });
@@ -714,8 +723,8 @@ class Contacts {
     @action removeByGroupIdMain(groupId) {
         let selected = self.broadcastGroupMemberMain;
         let newSelected = [];
-        selected.forEach(v => {
-            if(v.groupId!=groupId){
+        selected.forEach((v) => {
+            if (v.groupId != groupId) {
                 newSelected.push(v);
             }
         });

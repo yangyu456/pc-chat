@@ -34,6 +34,8 @@ import ConnectionStatus from "../../wfc/client/connectionStatus";
     close: () => stores.snackbar.toggle(false),
     canidrag: () => !!stores.chat.conversation && !stores.batchsend.show,
     connectionStatus: stores.wfc.connectionStatus,
+    // 窗口抖屏
+    toggleShake: stores.chat.toggleShake,
 }))
 @observer
 export default class Layout extends Component {
@@ -43,7 +45,11 @@ export default class Layout extends Component {
         offline: false,
     };
 
+    // 在第一次渲染后调用，之后组件已经生成了对应的DOM结构
     componentDidMount() {
+        if (localStorage.getItem("isWin")) {
+            this.props.toggleShake();
+        }
         if (isElectron()) {
             var templates = [
                 {
@@ -93,6 +99,13 @@ export default class Layout extends Component {
                         break;
                     }
                     node = node.parentNode;
+                }
+            });
+
+            ipcRenderer.on("quickSendEvent", (event, arg) => {
+                let activeInput = document.getElementById("messageInput");
+                if (activeInput == document.activeElement) {
+                    document.getElementById("messageInput").innerHTML += arg;
                 }
             });
         }
@@ -209,13 +222,13 @@ export default class Layout extends Component {
                 this.connectionStatus === 2) /** receving */;
 
         return (
-            <div className={classes.overAllFrame}>
+            <div className={classes.overAllFrame} id="shakeWin">
                 <div>
                     <Snackbar close={close} show={show} text={message} />
 
                     <Loader show={loading} />
                     {isElectron() && window.process.platform !== "linux" ? (
-                        <Header location={location} />
+                        <Header location={location} ref="header" />
                     ) : (
                         ""
                     )}

@@ -1,5 +1,6 @@
 import clazz from "classname";
 import React, { Component } from "react";
+import { parser as emojiParse } from "utils/emoji";
 import helper from "utils/helper";
 import ConversationType from "../../../../wfc/model/conversationType";
 import classes from "./style.css";
@@ -58,7 +59,7 @@ export default class ConversationItem extends Component {
                 type: "separator",
             },
             {
-                //label: conversationInfo.isTop ? 'Unsticky' : 'Sticky on Top',
+                // label: conversationInfo.isTop ? "Unsticky" : "Sticky on Top",
                 label: conversationInfo.isTop ? "取消置顶" : "置顶聊天",
                 click: () => {
                     this.props.sticky(conversationInfo);
@@ -69,6 +70,7 @@ export default class ConversationItem extends Component {
                 label: "删除",
                 click: () => {
                     this.props.removeChat(conversationInfo);
+                    this.props.removeConversation(conversationInfo);
                 },
             },
             {
@@ -89,10 +91,6 @@ export default class ConversationItem extends Component {
         }
     }
 
-    // 点击窗口抖动
-    // winJitter () {       
-    // }
-
     render() {
         let e = this.props.conversationInfo;
         let conversation = this.props.currentConversation;
@@ -112,7 +110,6 @@ export default class ConversationItem extends Component {
         var portrait = e.portrait();
         // 未读数量
         let txtUnread = unreadCount.unread > 99 ? "..." : unreadCount.unread;
-
         if (!portrait) {
             switch (e.conversation.type) {
                 case ConversationType.Single:
@@ -127,6 +124,15 @@ export default class ConversationItem extends Component {
         }
 
         if (isElectron()) {
+            var userInfo =
+                this.props.getUserInfo &&
+                e.lastMessage &&
+                this.props.getUserInfo(e.lastMessage.from, false, e.target);
+            // console.warn("console-user-list", e);
+            var userName =
+                userInfo && e.conversation.conversationType === 1
+                    ? userInfo.displayName + ":"
+                    : "";
             return (
                 <div
                     className={clazz(classes.chat, {
@@ -138,18 +144,6 @@ export default class ConversationItem extends Component {
                     onClick={(ev) => {
                         chatTo(e.conversation);
                         this.props.markedRead(e);
-                        // console.log(
-                        //     "这是打印的e-------------------------------",
-                        //     e.isSilent
-                        // );
-                        // console.log(
-                        //     "这是打印的e2.0-------------------------------",
-                        //     hasUnread
-                        // );
-                        // console.log(
-                        //     "这是打印的e。0-------------------------------",
-                        //     txtUnread
-                        // );
                     }}
                 >
                     <div className={classes.inner}>
@@ -166,7 +160,6 @@ export default class ConversationItem extends Component {
                                 // TODO portrait
                                 src={portrait}
                                 onError={this.handleError}
-                                onClick={this.winJitter}
                             />
                         </div>
 
@@ -178,14 +171,28 @@ export default class ConversationItem extends Component {
 
                             <span
                                 className={classes.message}
+                                //     dangerouslySetInnerHTML={{
+                                //         __html: e.draft
+                                //             ? "[草稿]" + e.draft
+                                //             : e.lastMessage &&
+                                //               e.lastMessage.messageContent
+                                //             ? e.lastMessage.messageContent.digest(
+                                //                   e.lastMessage
+                                //               )
+                                //             : "",
+                                //     }}
+                                // />
                                 dangerouslySetInnerHTML={{
                                     __html: e.draft
                                         ? "[草稿]" + e.draft
                                         : e.lastMessage &&
                                           e.lastMessage.messageContent
-                                        ? e.lastMessage.messageContent.digest(
-                                              e.lastMessage
-                                          )
+                                        ? userName +
+                                          emojiParse(
+                                              e.lastMessage.messageContent.digest(
+                                                  e.lastMessage
+                                              )
+                                          ).replace(/https:\/\/twemoji\.maxcdn\.com\/v\/12\.1\.6\/72x72\//g,'assets/twemoji/72x72/')
                                         : "",
                                 }}
                             />
@@ -249,7 +256,7 @@ export default class ConversationItem extends Component {
                                                 : e.lastMessage &&
                                                   e.lastMessage.messageContent
                                                 ? e.lastMessage.messageContent.digest(
-                                                      e.la
+                                                      e.lastMessage
                                                   )
                                                 : "",
                                         }}

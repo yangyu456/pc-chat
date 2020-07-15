@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 //node模块execFile执行外部程序
 const { execFile } = require("child_process");
+const { download } = require("electron-dl");
 import tmp from "tmp";
 import {
     app,
@@ -27,6 +28,7 @@ import proto from "./marswrapper.node";
 
 import pkg from "./package.json";
 import { func } from "prop-types";
+import { electron } from "process";
 //import Config from './src/js/config';
 
 let Locales = {};
@@ -59,6 +61,7 @@ let userinfo = {};
 let baseURL = "";
 let remindCounts = "";
 let remindUrl = "";
+let downloadFileMap = new Map();
 
 let mainMenu = [
     {
@@ -636,7 +639,7 @@ function flashing() {
 
 const createMainWindow = () => {
     var mainWindowState = windowStateKeeper({
-        defaultWidth: 600,
+        defaultWidth: 670,
         defaultHeight: 600,
     });
 
@@ -659,7 +662,7 @@ const createMainWindow = () => {
         icon,
     });
     // 开发者工具
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
 
     mainWindow.setSize(400, 480);
     mainWindow.loadURL(`file://${__dirname}/src/index.html?main`);
@@ -689,6 +692,52 @@ const createMainWindow = () => {
             mainWindow.hide();
         }
     });
+
+    mainWindow.webContents.session.on(
+        "will-download",
+        (event, item, webContents) => {
+            // 设置保存路径,使Electron不提示保存对话框。
+            // item.setSavePath('/tmp/save.pdf')
+
+            item.on("updated", (event, state) => {
+                if (state === "interrupted") {
+                    console.log("Download is interrupted but can be resumed");
+                } else if (state === "progressing") {
+                    if (item.isPaused()) {
+                        console.log("Download is paused");
+                    } else {
+                        console.log(
+                            `Received bytes: ${item.getReceivedBytes()}, ${item.getTotalBytes()}`
+                        );
+                        let messageId = downloadFileMap.get(item.getURL());
+                        mainWindow.webContents.send("file-download-progress", {
+                            messageId: messageId,
+                            receivedBytes: item.getReceivedBytes(),
+                            totalBytes: item.getTotalBytes(),
+                        });
+                    }
+                }
+            });
+            item.once("done", (event, state) => {
+                let messageId = downloadFileMap.get(item.getURL());
+                if (state === "completed") {
+                    console.log("Download successfully");
+                    // mainWindow.webContents.send('downloaded-tip-notify');
+                    mainWindow.webContents.send("file-downloaded", {
+                        messageId: messageId,
+                        filePath: item.getSavePath(),
+                    });
+                    // console.log("item.getSavePath-------",item.getSavePath());
+                    // mainWindow.webContents.send('download-notification', {
+                    //     path : item.getSavePath
+                    // });
+                } else {
+                    console.log(`Download failed: ${state}`);
+                }
+                downloadFileMap.delete(item.getURL());
+            });
+        }
+    );
 
     // 任务栏闪烁
     mainWindow.on("show", () => mainWindow.flashFrame(false));
@@ -894,37 +943,14 @@ const createMainWindow = () => {
     });
 
     ipcMain.on("file-download", async (event, args) => {
-        var filename = args.filename;
-
-        // // TODO bug here
-        // fs.exists(filename, (exists) => {
-        //     if (!exists) {
-        //         fs.writeFileSync(filename, args.raw.replace(/^data:image\/png;base64,/, ''), {
-        //             encoding: 'base64',
-        //             // Overwrite file
-        //             flag: 'wx',
-        //         });
-        //     }
-        //     event.returnValue = filename;
-        // });
-
-        dialog.showSaveDialog({ defaultPath: filename }, (fileName) => {
-            if (fileName === undefined) {
-                console.log("You didn't save the file");
-                event.returnValue = "";
-                return;
-            }
-
-            let content = args.raw.replace(/^data:image\/png;base64,/, "");
-            // fileName is a string that contains the path and filename created in the save file dialog.
-            fs.writeFileSync(fileName, content, "base64", (err) => {
-                if (err) {
-                    console.log(
-                        "An error ocurred creating the file " + err.message
-                    );
-                }
-            });
-            event.returnValue = fileName;
+        var filename = args.remotePath;
+        var messageId = args.messageId;
+        var originname = args.filename;
+        // console.log(originname);
+        downloadFileMap.set(filename, messageId);
+        await download(mainWindow, filename, {
+            saveAs: true,
+            filename: originname,
         });
     });
 
@@ -933,6 +959,10 @@ const createMainWindow = () => {
     });
 
     ipcMain.on("open-folder", async (event, dir) => {
+        shell.openItem(dir);
+    });
+
+    ipcMain.on("open-folder2", (event, dir) => {
         shell.openItem(dir);
     });
 
@@ -960,6 +990,20 @@ const createMainWindow = () => {
         mainWindow.setResizable(true);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindowState.manage(mainWindow);
+    });
+
+    ipcMain.on("initQuickSend", (event, args) => {
+        globalShortcut.register(args.command, function () {
+            mainWindow.webContents.send("quickSendEvent", args.message);
+        });
+    });
+
+    ipcMain.on("updateQuickSend", (event, args) => {
+        globalShortcut.unregister(args.command);
+        globalShortcut.register(args.command, function () {
+            mainWindow.webContents.send("quickSendEvent", args.message);
+            // mainWindow.webContents.getElementById("messageInput").value += args.message;
+        });
     });
 
     powerMonitor.on("resume", () => {
@@ -1025,10 +1069,12 @@ app.on("activate", (e) => {
     }
 });
 
+//托盘右下角退出事件
 function disconnectAndQuit() {
     global.sharedObj.proto.disconnect(0);
     var now = new Date();
     var exitTime = now.getTime() + 500;
+    updateOnlineState("4");
     while (true) {
         now = new Date();
         if (now.getTime() > exitTime) break;

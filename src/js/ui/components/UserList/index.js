@@ -154,6 +154,9 @@ export default class UserList extends Component {
         list = list.filter(e => e.hasOwnProperty("uid"));
 
         return list.map((e, index) => {
+            if(!e.portrait){
+                e.portrait = 'assets/images/user-fallback.png';
+            }
             return (
                 <li
                     className={clazz({
@@ -168,7 +171,7 @@ export default class UserList extends Component {
                         src={e.portrait} />
                     <span
                         className={classes.username}
-                        dangerouslySetInnerHTML={{ __html: e.name }} />
+                        dangerouslySetInnerHTML={{ __html: e.name + "(" +  e.structureName + ")" }} />
 
                     <i className="icon-ion-android-done-all" />
                 </li>

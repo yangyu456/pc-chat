@@ -4,12 +4,14 @@ import { render } from 'react-dom';
 import { Provider } from 'mobx-react';
 import { HashRouter } from 'react-router-dom';
 import { ipcRenderer, remote } from 'electron';
-
+import wfc from "./js/wfc/client/wfc";
 import './global.css';
 import './assets/fonts/icomoon/style.css';
 import 'utils/albumcolors';
 import getRoutes from './js/ui/routes';
 import stores from './js/ui/stores';
+import { last } from 'underscore';
+import TipNotification from './js/wfc/messages/notification/tipNotification';
 
 var sharedObj = remote.getGlobal('sharedObj');
 
@@ -85,6 +87,39 @@ export default class App extends Component {
         ipcRenderer.on('show-messages', () => {
             navigator.history.push('/');
             stores.chat.toggleConversation(true);
+        });
+
+        ipcRenderer.on('file-downloaded', (event, msg) => {
+            // console.log('file-downloaded', msg);
+            var conversation = stores.chat.conversation;
+            // console.log('downloaded conversation',conversation);
+            var path = msg.filePath.replace(/\\/g,"/");
+            var lastIndex = path.lastIndexOf("/");
+            var folderpath = path.substring(0, lastIndex + 1);
+            var filename = path.substring(lastIndex + 1);
+            if (!conversation){
+                console.log("cantsend");
+            }else{
+                if(conversation.type=="0"){
+                    //如果不是一对一聊天不发送回执
+                    var downloadedMessageContent = new TipNotification("downloadfiletip"+filename);
+                    stores.chat.sendMessage(downloadedMessageContent);
+                    wfc.setConversationDraft(conversation, "");
+                }
+            }
+            const myNotification = new Notification('文件传输', {
+                body: '下载文件成功 ！'
+            });
+            myNotification.onclick = () => {
+                // console.log('通知被点击后触发');
+                ipcRenderer.send('open-folder2', folderpath);
+            }
+            // stores.chat.updateFileMessageContent(msg.messageId, msg.filePath);
+        });
+
+        ipcRenderer.on('file-download-progress', (event, msg) => {
+            console.log('file-download-progress', msg);
+            stores.chat.updateFileMessageDownloadProgress(msg.messageId, msg.filePath);
         });
 
         // Insert the qq emoji 插入qq表情

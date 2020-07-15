@@ -186,6 +186,7 @@ export default class TagView extends Component {
             <div className={classes.container}>
                 <div className={classes.searchBar}>
                     {/* <i className="icon-ion-ios-search-strong"/> */}
+                    {/* <div style={{color:'#a8a9a9',margin:'15px 0',paddingLeft:'10px'}}>分组名</div> */}
                     <input
                         id="search-tag"
                         onChange={e => this.inputGroupName(e.target.value)}
@@ -197,7 +198,7 @@ export default class TagView extends Component {
                      ref="container">
                     <div className={classes.btnGroup}>
                         <button className={classes.backBtn} type="button" onClick={() => this.backUpdate()}>返回</button>
-                        <button className={classes.saveBtn} type="button" onClick={() => this.saveUpdate()}>保存编辑</button>
+                        <button className={classes.saveBtn} type="button" onClick={() => this.saveUpdate()}>保存</button>
                     </div>
                     {this.renderColumns(result, 0, query,checkedList)}
                 </div>

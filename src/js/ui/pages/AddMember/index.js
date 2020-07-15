@@ -90,8 +90,7 @@ export default class AddMember extends Component {
                 onCancel={e => this.close()}
                 show={this.props.show}>
                 <ModalBody className={classes.container}>
-                    Add Members
-
+                    添加成员
                     <div className={classes.avatars}>
                         {
                             this.state.selected.map((e, index) => {

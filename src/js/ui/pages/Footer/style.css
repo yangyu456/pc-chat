@@ -7,7 +7,7 @@
 .footer {
     position: relative;
     background: #fff;
-
+    /* 
     & > nav {
         display: flex;
         width: calc(311px - 34px);
@@ -34,10 +34,10 @@
 
     & > nav span:hover i {
         color: var(--active) !important;
-    }
+    } */
 }
 
-.footer .active {
+/* .footer .active {
     position: relative;
 
     &::after {
@@ -53,21 +53,21 @@
     & i {
         color: var(--active) !important;
     }
-}
+} */
 
 .right {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     right: 0;
-    width: calc(100% - 311px);
+    width: calc(100% - 290px -70px);
     background: #fff;
 }
 
-.contacts {
+/* .contacts {
     box-shadow: inset 0 1px 0 0 var(--shadow-color);
     position: relative;
     display: flex;
-    height: 60px;
+    height: 228px;
     align-items: center;
     justify-content: space-between;
 
@@ -94,11 +94,11 @@
         display: flex;
         justify-content: space-between;
     }
-}
+} */
 
-.settings {
-    box-shadow: inset 0 1px 0 0 var(--shadow-color);
-    display: flex;
+/* .settings { */
+/* box-shadow: inset 0 1px 0 0 var(--shadow-color); */
+/* display: flex;
     height: 60px;
     text-align: right;
     justify-content: flex-end;
@@ -126,28 +126,28 @@
         &:hover {
             background: color(var(--shadow-color) alpha(-50%));
         }
-    }
+    } */
 
-    & .button i {
+/* & .button i {
         position: absolute;
         right: 14px;
         top: 50%;
         transform: translateY(-50%);
         font-size: 20px;
     }
-}
+} */
 
-.options {
+/* .options {
     display: inline-block;
     margin-right: 12px;
     font-family: "Roboto";
     font-size: 14px;
     color: rgba(0, 0, 0, 0.8);
     text-transform: uppercase;
-}
+} */
 
 @media (width <= 800px) {
-    .footer {
+    /* .footer {
         & > nav {
             width: calc(280px - 34px);
             padding: 14px 17px 0;
@@ -162,13 +162,13 @@
         & > nav i {
             font-size: 22px;
         }
-    }
+    } */
 
     .right {
-        width: calc(100% - 280px);
+        width: calc(100% - 330px);
     }
 
-    .contacts {
+    /* .contacts {
         box-shadow: inset 0 1px 0 0 var(--shadow-color);
         height: 46px;
 
@@ -178,9 +178,9 @@
             margin-left: 20px;
             line-height: 46px;
         }
-    }
+    } */
 
-    .settings {
+    /* .settings {
         box-shadow: inset 0 1px 0 0 var(--shadow-color);
         height: 46px;
 
@@ -195,9 +195,9 @@
         & .button i {
             font-size: 16px;
         }
-    }
+    } */
 
-    .options {
+    /* .options {
         font-size: 12px;
-    }
+    } */
 }

@@ -1,7 +1,6 @@
+import React, { Component } from "react";
 
-import React, { Component } from 'react';
-
-import classes from './style.css';
+import classes from "./style.css";
 
 export default class Personal extends Component {
     render() {
@@ -9,8 +8,7 @@ export default class Personal extends Component {
             <div className={classes.settings}>
                 {/*
                 
-                */
-                }
+                */}
             </div>
         );
     }

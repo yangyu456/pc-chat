@@ -1,7 +1,6 @@
+import React, { Component } from "react";
 
-import React, { Component } from 'react';
-
-import classes from './style.css';
+import classes from "./style.css";
 
 export default class Placeholder extends Component {
     render() {
@@ -23,8 +22,7 @@ export default class Placeholder extends Component {
                     Fork on Github
                     <i className="icon-ion-social-github" />
                 </a>
-                */
-                }
+                */}
             </div>
         );
     }

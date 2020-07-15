@@ -1,8 +1,6 @@
 import { observable, action } from "mobx";
 import axios from "axios";
 import { ipcRenderer, isElectron } from "../../platform";
-
-import helper from "utils/helper";
 import contacts from "./contacts";
 import settings from "./settings";
 import members from "./members";
@@ -23,6 +21,8 @@ import KickoffGroupMemberNotification from "../../wfc/messages/notification/kick
 import MessageConfig from "../../wfc/client/messageConfig";
 import PersistFlag from "../../wfc/messages/persistFlag";
 import MediaMessageContent from "../../wfc/messages/mediaMessageContent";
+import helper from "utils/helper";
+import { observer } from "mobx-react";
 
 function hasUnreadMessage(messages) {
     var counter = 0;
@@ -63,11 +63,18 @@ class Chat {
     // TODO remove end
 
     @observable showConversation = false;
+    //是否显示编辑分组
+    @observable showEditGroupName = false;
 
     // maybe userInfo, GroupInfo, ChannelInfo, ChatRoomInfo
     @observable target = false;
 
     @observable conversation;
+
+    // 判断今天是否可以签到
+    @observable canSignToday = true;
+
+    canEditGroupName = true;
 
     initialized = false;
 
@@ -78,7 +85,79 @@ class Chat {
 
     @observable previewImage = false;
 
+    @observable searchingText = "";
+
+    @observable historyList = [];
+
+    Hist ={};
+
+    @observable quickSendList = [{
+        command: "F1",
+        message: ""
+    },
+    {
+        command: "F2",
+        message: ""
+    },
+    {
+        command: "F3",
+        message: ""
+    },
+    {
+        command: "F4",
+        message: ""
+    },
+    {
+        command: "F5",
+        message: ""
+    },
+    {
+        command: "F6",
+        message: ""
+    },
+    {
+        command: "F7",
+        message: ""
+    },
+    {
+        command: "F8",
+        message: ""
+    },
+    {
+        command: "F9",
+        message: ""
+    }];
+ 
+   @action HistData(i) {
+        let histDate = [
+           "你你你你你你你你你你你你你你你你",
+           "你你你你你你你你你你你你你你你你"
+        ];
+        self.Hist = histDate;
+    }
+
     toPreivewImageOption = {};
+
+    @action async getNewPotrait(id) {
+        //根据id获取用户对象
+        var response = await axios.post("/getUserInfo", {
+            userId: id,
+            clientId: wfc.getClientId(),
+        });
+        let obj = "";
+        // console.log("---------- getUserInfo", response.data.result);
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    obj = response.data.result.portrait;
+                    break;
+                default:
+                    //console.log(response.data);
+                    break;
+            }
+        }
+        return obj;
+    }
 
     @action togglePreviewImage(e, show = false, messageId) {
         self.previewImage = show;
@@ -106,6 +185,145 @@ class Chat {
         self.showConversation = show;
     }
 
+    //打开或关闭编辑分组名字
+    @action toggleEditGroupName() {
+        // if(!self.canEditGroupName){
+        //     return null;
+        // }
+        setTimeout(() => {
+            self.showEditGroupName = true; 
+        },200);
+    }
+
+    @action closeEditGroupName() {
+        self.showEditGroupName = false;
+    }
+
+    @action saveEditGroupName(name, groupId){
+        if(!name){
+            return null;
+        } else{
+            self.saveEditGroupNameData(name, groupId);
+            //保存分组名ajax请求
+        }
+        self.showEditGroupName = false;
+        // self.canEditGroupName = false;
+        // setTimeout(() => {
+        //     self.canEditGroupName = true;
+        // },200);
+    }
+
+    @action saveEditGroupNameData(name, groupId){
+        wfc.modifyGroupInfo(groupId, 0, name, [0], null, (res) => {
+            console.log(res)
+        },(err) => {
+            console.log(err)
+        });
+    }
+
+    @action getRecentMonth(){
+        var date = new Date();
+        var lastDate = new Date(date - 1000 * 60 * 60 * 24 * 30);
+        var year = lastDate.getFullYear();
+        var month = lastDate.getMonth()+1;
+        var day = lastDate.getDate();
+        return year + "-" + (month < 10 ? "0" + month : month) + "-" + (day < 10 ? "0" + day : day) + " " + "00:00:00";
+    }
+
+    @action getCurrentTime(){
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth()+1;
+        var day = date.getDate();
+        return year + "-" + (month < 10 ? "0" + month : month) + "-" + (day < 10 ? "0" + day : day) + " " + "23:59:59";
+    }
+
+    @action
+    async getHistoryList(starttime="",endtime=""){
+        let result = [];
+        if(starttime == ""){
+            starttime = self.getRecentMonth();
+        }
+        if(endtime == ""){
+            endtime = self.getCurrentTime();
+        }
+        var conversation = self.conversation;
+        let response = await axios.post("/msg/search", {
+            sourceId: wfc.getUserId(),
+            targetId: conversation.target,
+            targetType: conversation.type,
+            startTime: starttime,
+            endTime: endtime,
+            keyword: self.searchingText
+        });
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    console.log("/msg/search------------",response.data);
+                    result = response.data.result
+                    break;
+                default:
+                    break;
+            }
+        }
+        self.historyList = result;
+    }
+
+    @action
+    async searchHistory(text,starttime,endtime){
+        // console.log('搜索历史聊天------------');
+        self.searchingText = text;
+        self.getHistoryList(starttime,endtime);
+    }
+
+    // 窗口抖屏事件
+    @action toggleShake(message) {
+        if (!document.getElementById("shakeWin")) {
+            return null;
+        }
+        console.log("message==================================", message);
+        if (message === true) {
+            return null;
+        }
+        // 对方发的群消息不做判断了，目前还行
+        // if (message.conversation.type) {
+        //     if (message.conversation.type === 1) {
+        //         return null;
+        //     }
+        // }
+        // console.log(
+        //     "对方发的判断========================================",
+        //     message.conversation
+        // );
+        let toShake = () => {
+            // top
+            let t = 0;
+            // left
+            let z = 10;
+            let shake = () => {
+                clearInterval(toShake.ap);
+                return toShake;
+            };
+            shake().ap = setInterval(() => {
+                // 圆周率180° 3.14
+                let i = (t / 180) * Math.PI;
+                // x 的正玄值 返回值在 -1.0 到 1.0 之间；
+                let x = Math.sin(i) * z;
+                // x 的余弦值 返回的是 -1.0 到 1.0 之间的数
+                let y = Math.cos(i) * z;
+                let s = document.getElementById("shakeWin").style;
+                // document.getElementById("shakeWin").className = ""
+                s.top = x + "px";
+                s.left = y + "px";
+                if ((t += 90) > 1080) {
+                    shake();
+                    s.left = 0 + "px";
+                }
+            }, 30);
+        };
+        toShake();
+    }
+
     onRecallMessage(operatorUid, messageUid) {
         let msg = wfc.getMessageByUid(messageUid);
         if (self.conversation && self.conversation.equal(msg.conversation)) {
@@ -119,6 +337,16 @@ class Chat {
     onReceiveMessage(message, hasMore) {
         console.log("chatTo", message);
         // TODO message id 消息ID
+        console.log(
+            "收到消息==========================================",
+            message
+        );
+        if (
+            message.messageContent.content === "你[抖了抖]对方" &&
+            message.conversation.target === self.conversation.target
+        ) {
+            self.toggleShake(message);
+        }
         if (
             self.conversation &&
             message.messageId > 0 &&
@@ -226,6 +454,8 @@ class Chat {
             default:
                 break;
         }
+        self.searchingText = "";
+        self.getHistoryList();
     }
 
     //@action async getMessages(conversation, fromIndex, before = 'true', count = '20', withUser = ''){
@@ -343,6 +573,19 @@ class Chat {
             }
         );
         return true;
+    }
+
+    updateFileMessageDownloadProgress(messageId, progress, total){
+        // TODO
+        console.log('download progress', messageId, progress, total)
+    }
+
+    updateFileMessageContent(messageId, filePath){
+        let message = wfc.getMessageById(messageId);
+        let content = message.messageContent;
+        content.localPath = filePath;
+        wfc.updateMessageContent(messageId, content)
+        self.forceRerenderMessage(messageId);
     }
 
     // return data url
@@ -595,6 +838,165 @@ class Chat {
         // Empty the chat content
         self.messageList = [];
         wfc.clearMessages(conversation);
+    }
+
+    @action updateQuickSend(command, message) {
+        let newList = self.quickSendList.map(e => {
+            //如果指令相同
+            if(e.command == command){
+                e.message = message;
+                //全局注册指令
+                self.updateQuickSendData(command,message);
+                ipcRenderer.send("updateQuickSend",{command:command,message:message});
+            }
+            return e;
+        });
+        self.quickSendList = newList;
+    }
+
+    async getQuickSendData() {
+        let response = await axios.post("/reply/queryList", {
+            username: wfc.getUserInfo(wfc.getUserId()).name,
+        });
+        let list = self.quickSendList;
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    response.data.result.forEach(e => {
+                        for(let i=0;i<list.length;i++){
+                            if(list[i].command == e.shortKey.toUpperCase()){
+                                list[i].message = e.content;
+                            }
+                        }
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
+        return self.quickSendList = list;
+    }
+
+    //新增修改数据接口
+    async updateQuickSendData(command,message) {
+        let response = await axios.post("/reply/save", {
+            username: wfc.getUserInfo(wfc.getUserId()).name,
+            content:message,
+            shortKey:command,
+            showIndex:"0",
+            enabled:"1"
+        });
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    console.log(response.data)
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    async getQuickSendDataInit() {
+        let response = await axios.post("/reply/queryList", {
+            username: wfc.getUserInfo(wfc.getUserId()).name,
+        });
+        let list = self.quickSendList;
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    response.data.result.forEach(e => {
+                        for(let i=0;i<list.length;i++){
+                            if(list[i].command == e.shortKey.toUpperCase()){
+                                list[i].message = e.content;
+                                ipcRenderer.send("initQuickSend",{command:list[i].command,message:e.content});
+                            }
+                        }
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
+        return self.quickSendList = list;
+    }
+    
+    @action initQuickSend() {
+        self.getQuickSendDataInit();
+    }
+
+    async sendSaveSign(type,remark,signDay) {
+        let response = await axios.post("/sign/signin", {
+            userId: wfc.getUserId(),
+            signDay: signDay,
+            signType: type,
+            signInRemark: remark
+        });
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    console.log(response.data);
+                    self.canSignToday = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    getSignDay(){
+        let today = new Date();
+        let y = today.getFullYear();
+        let m = today.getMonth()+1;
+        let d = today.getDate();
+        if(m<10){
+            m="0"+m;
+        }
+        if(d<10){
+            d="0"+d;
+        }
+        let signDay = y + "-" + m + "-" + d;
+        return signDay;
+    }
+
+    @action saveSign(type,remark = "") {
+        // 保存签到记录
+        self.sendSaveSign(type,remark,self.getSignDay());
+    }
+
+    @action
+    async getSignStatus() {
+        let result = {
+            flag: false,
+            signInTimeStr: "",
+            signType: ""
+        };
+        let response = await axios.post("/sign/signinfo", {
+            userId: wfc.getUserId(),
+            signDay: self.getSignDay()
+        });
+        if (response.data) {
+            switch (response.data.code) {
+                case 0:
+                    console.log(response.data);
+                    if(response.data.result.length>0){
+                        let res = response.data.result[0];
+                        // 今天已经签到过
+                        result.flag = true;
+                        result.signInTimeStr = res.signInTimeStr;
+                        result.signType = res.signType=="1"?"居家":"现场";
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return result;
+    }
+
+    @action removeConversation(conversationInfo) {
+        self.target = false;
+        self.conversation = null;
     }
 }
 

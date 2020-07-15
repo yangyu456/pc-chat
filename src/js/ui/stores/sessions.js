@@ -82,7 +82,9 @@ class sessions {
 
     @action removeConversation(conversationInfo) {
         self.conversations = self.conversations.filter(
-            (e) => !e.conversation.equal(conversationInfo.conversation)
+            (e) => {
+                return e.conversation.type != conversationInfo.conversation.type && e.conversation.target != conversationInfo.target;
+            }
         );
 
         wfc.removeConversation(conversationInfo.conversation, true);
